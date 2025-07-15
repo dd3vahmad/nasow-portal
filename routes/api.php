@@ -5,21 +5,22 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\OAuthController;
 
-/* --------------- Public (unauthenticated) */
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login',    [AuthController::class, 'login']);
+Route::prefix('api')->group(function () {
+    /* Public (unauthenticated) */
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login',    [AuthController::class, 'login']);
 
-Route::get('oauth/{provider}',      [OAuthController::class, 'redirect']);
-Route::get('oauth/{provider}/back', [OAuthController::class, 'callback']);
+    Route::get('oauth/{provider}',      [OAuthController::class, 'redirect']);
+    Route::get('oauth/{provider}/back', [OAuthController::class, 'callback']);
 
-/* --------------- Protected (token) */
-Route::middleware(['auth:sanctum'])->group(function () {
-    Route::get('/profile', fn (Request $r) => $r->user());
+    /* Protected (token) */
+    Route::middleware(['auth:sanctum'])->group(function () {
+        Route::get('/profile', fn (Request $r) => $r->user());
 
-    // Example: only admins
-    Route::middleware('role:admin')->get('/admin/metrics', function () {
-        return ['status' => 'top secret'];
+        Route::middleware('role:national-admin')->get('/admin/metrics', function () {
+            return ['status' => 'top secret'];
+        });
+
+        Route::post('/logout', [AuthController::class, 'logout']);
     });
-
-    Route::post('/logout', [AuthController::class, 'logout']);
 });

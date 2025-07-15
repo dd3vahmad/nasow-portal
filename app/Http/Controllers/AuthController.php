@@ -38,7 +38,7 @@ class AuthController extends Controller
         ], 201);
     }
 
-    /* ---------- Login (email + password) */
+    /* Login (email + password) */
     public function login(Request $request)
     {
         $data = $request->validate([
@@ -60,7 +60,7 @@ class AuthController extends Controller
         return ['token' => $token];
     }
 
-    /* ---------- Logout */
+    /* Logout */
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
