@@ -25,7 +25,6 @@ class StoreUserEmploymentsRequest extends BaseRequest {
         $maxEmploymentYear = now()->year;
 
         return [
-            '' => 'required|array|min:1',
             '*.employer' => 'required|string|max:50',
             '*.role' => 'required|string|max:50',
             '*.employer_address' => 'required|string|max:255',

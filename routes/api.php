@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserDetailsController;
+use App\Http\Controllers\UserDocumentsController;
 use App\Http\Controllers\UserEducationsController;
 use App\Http\Controllers\UserEmploymentsController;
 use Illuminate\Support\Facades\Route;
@@ -23,6 +24,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/educations', [UserEducationsController::class, 'store']);
     Route::post('/employments', [UserEmploymentsController::class, 'store']);
     Route::post('/specialization', [UserDetailsController::class, 'add_specialization']);
+    Route::post('/documents', [UserDocumentsController::class, 'store']);
 
     // Route::middleware('role:national-admin')->get('/admin/metrics', function () {
     //     return ['status' => 'top secret'];

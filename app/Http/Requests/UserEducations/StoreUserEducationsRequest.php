@@ -25,7 +25,6 @@ class StoreUserEducationsRequest extends BaseRequest {
         $maxGraduationYear = date('Y') + 5;
 
         return [
-            '' => 'required|array|min:1',
             '*.institution' => 'required|string|max:50',
             '*.course_of_study' => 'required|string|max:50',
             '*.qualification' => 'required|string|max:50',

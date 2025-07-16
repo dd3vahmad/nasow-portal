@@ -22,10 +22,7 @@ class StoreUserDocumentsRequest extends BaseRequest {
      */
     public function rules()
     {
-        $maxEmploymentYear = now()->year;
-
         return [
-            '' => 'required|array|min:1',
             '*.name' => 'required|string|max:50',
             '*.resource' => 'required|file|mimes:pdf,doc,docx|max:2048',
         ];
