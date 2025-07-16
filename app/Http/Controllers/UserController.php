@@ -6,6 +6,7 @@ use App\Http\Requests\UserDetails\StoreUserDetailsRequest;
 use App\Http\Requests\UserEducations\StoreUserEducationsRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\UserDetails;
+use App\Models\UserEducations;
 use App\Models\UserMemberships;
 use App\Services\MembershipNumberGenerator;
 use FFI\Exception;
@@ -53,22 +54,23 @@ class UserController extends Controller
     public function store(StoreUserDetailsRequest $request) {
         try {
             $user = Auth::user();
+            $detailsPayload = $request->validated();
 
             $details = [
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'other_name' => $request->other_name,
-                'gender' => $request->gender,
-                'dob' => $request->dob,
-                'specialization' => $request->specialization,
-                'address' => $request->address,
-                'phone' => $request->phone,
-                'state' => $request->state,
+                'first_name' => $detailsPayload->first_name,
+                'last_name' => $detailsPayload->last_name,
+                'other_name' => $detailsPayload->other_name,
+                'gender' => $detailsPayload->gender,
+                'dob' => $detailsPayload->dob,
+                'specialization' => $detailsPayload->specialization,
+                'address' => $detailsPayload->address,
+                'phone' => $detailsPayload->phone,
+                'state' => $detailsPayload->state,
                 'user_id' => $user->id,
             ];
 
             $user_details = UserDetails::createOrFirst($details);
-            $this->createMembership($request->category, $user->id);
+            $this->createMembership($detailsPayload->category, $user->id);
             $user->update(['reg_status' => 'education']);
 
             return ApiResponse::success('User details added successfully', $user_details);
@@ -105,11 +107,23 @@ class UserController extends Controller
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function add_educations(StoreUserEducationsRequest $request) {
+    public function add_educations(StoreUserEducationsRequest $request)
+    {
         try {
             $user = Auth::user();
-            $educations = [];
-            return ApiResponse::success('Educations added successfully', $educations);
+            $educationsPayload = $request->validated();
+
+            $savedEducations = [];
+
+            foreach ($educationsPayload as $educationData) {
+                $educationData['user_id'] = $user->id;
+
+                $education = UserEducations::create($educationData);
+
+                $savedEducations[] = $education;
+            }
+
+            return ApiResponse::success('Educations added successfully', $savedEducations);
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
         }
