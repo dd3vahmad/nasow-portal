@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\UserDetails;
+use App\Models\UserMemberships;
+use App\Services\MembershipNumberGenerator;
+use FFI\Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -49,14 +52,29 @@ class UserController extends Controller
                 'user_id' => $user->id,
             ];
 
-            $category = $request->category;
-            // Store user membership here;
-
             $user = UserDetails::createOrFirst($details)->first();
+            $this->createMembership($request->category, $user->id);
 
             return ApiResponse::success('User details added successfully', $user);
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
         }
+    }
+
+    /**
+     * Create membership record
+     *
+     * @param string
+     * @return UserMemberships
+     */
+    protected function createMembership(string $category, int $user_id) {
+        if (!in_array($category, config('membership_categories'))) {
+            throw new Exception("Invalid category", 1);
+        }
+
+        $generator = new MembershipNumberGenerator();
+        $membership_no = $generator->generate($category);
+
+        return UserMemberships::createOrFirst([ 'no' => $membership_no, 'category' => $category, 'user_id' => $user_id ])->first();
     }
 }
