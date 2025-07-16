@@ -8,6 +8,7 @@ use App\Models\UserDetails;
 use App\Models\UserMemberships;
 use App\Services\MembershipNumberGenerator;
 use FFI\Exception;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class UserDetailsController extends Controller
@@ -70,5 +71,28 @@ class UserDetailsController extends Controller
             'category' => $category,
             'user_id' => $user_id
         ])->first();
+    }
+
+    /**
+     * Add user area of specialization
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function add_specialization(Request $request) {
+        try {
+            $specialization = $request->area_of_specialization;
+            if (!$specialization) {
+                return ApiResponse::error('Area of specialization is required and must be a string');
+            }
+
+            $user = Auth::user();
+            $user_details = UserDetails::where('user_id', $user->id)->first();
+            $user_details->update(['specialization' => $specialization]);
+
+            return ApiResponse::success('Area of specialization added successfully', $user_details);
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
     }
 }

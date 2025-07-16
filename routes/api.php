@@ -22,6 +22,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/details', [UserDetailsController::class, 'store']);
     Route::post('/educations', [UserEducationsController::class, 'store']);
     Route::post('/employments', [UserEmploymentsController::class, 'store']);
+    Route::post('/specialization', [UserDetailsController::class, 'add_specialization']);
 
     // Route::middleware('role:national-admin')->get('/admin/metrics', function () {
     //     return ['status' => 'top secret'];
