@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\User;
+use App\Models\UserCredential;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -20,28 +21,32 @@ class LoginController extends Controller {
      */
     public function login(Request $request): JsonResponse
     {
-        $validator = $this->validator($request->all());
+        try {
+            $validator = $this->validator($request->all());
 
-        if ($validator->fails()) {
-            return ApiResponse::error('Validation failed', 422, $validator->errors());
-        }
-        $validated = $validator->validated();
+            if ($validator->fails()) {
+                return ApiResponse::error('Validation failed', 422, $validator->errors());
+            }
+            $validated = $validator->validated();
+            $user = User::where('email', $validated['email'])->first();
+            $cred = $user->credentials;
 
-        $user = User::where('email', $validated['email'])->first();
+            if (!$user || !Hash::check($validated['password'], $cred->password)) {
+                throw ValidationException::withMessages([
+                    'email' => ['The provided credentials are incorrect.'],
+                ]);
+            }
 
-        if (!$user || !Hash::check($validated['password'], $user->password)) {
-            throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
+            $token = (string) $user->createToken('x-auth-token', ['*'])->plainTextToken;
+
+            return ApiResponse::success('Login successful', [
+                'token' => $token,
+                'token_type' => 'bearer',
+                'expires_in' => config('sanctum.expiration') * 60,
             ]);
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
         }
-
-        $token = (string) $user->createToken('x-auth-token', ['*'])->plainTextToken;
-
-        return ApiResponse::success('Login successful', [
-            'token' => $token,
-            'token_type' => 'bearer',
-            'expires_in' => config('sanctum.expiration') * 60,
-        ]);
     }
 
     /**
