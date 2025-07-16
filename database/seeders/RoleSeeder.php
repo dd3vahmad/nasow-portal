@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -16,32 +15,32 @@ class RoleSeeder extends Seeder
     {
         DB::table('roles')->insertOrIgnore([
             [
-                'name' => 'National Admin',
-                'guard_name' => 'national-admin',
+                'name' => 'national-admin',
+                'guard_name' => 'api',
                 'created_at' => Date::now(),
                 'updated_at' => Date::now(),
             ],
             [
-                'name' => 'State Admin',
-                'guard_name' => 'state-admin',
+                'name' => 'state-dmin',
+                'guard_name' => 'api',
                 'created_at' => Date::now(),
                 'updated_at' => Date::now(),
             ],
             [
-                'name' => 'Member',
-                'guard_name' => 'member',
+                'name' => 'member',
+                'guard_name' => 'api',
                 'created_at' => Date::now(),
                 'updated_at' => Date::now(),
             ],
             [
-                'name' => 'Support Staff',
-                'guard_name' => 'support-staff',
+                'name' => 'support-staff',
+                'guard_name' => 'api',
                 'created_at' => Date::now(),
                 'updated_at' => Date::now(),
             ],
             [
-                'name' => "Guest",
-                'guard_name' => 'guest',
+                'name' => "guest",
+                'guard_name' => 'api',
                 'created_at' => Date::now(),
                 'updated_at' => Date::now(),
             ]

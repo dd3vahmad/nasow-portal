@@ -14,9 +14,9 @@ class RolePermissionSeeder extends Seeder
         $permissions = DB::table('permissions')->pluck('id', 'name');
 
         $rolePermissionsMap = [
-            'National Admin' => $permissions->values()->all(),
+            'national-admin' => $permissions->values()->all(),
 
-            'State Admin' => [
+            'state-dmin' => [
                 'view members',
                 'manage members',
                 'verify membership',
@@ -35,7 +35,7 @@ class RolePermissionSeeder extends Seeder
                 'view reports',
             ],
 
-            'Member' => [
+            'member' => [
                 'edit own profile',
                 'log cpd',
                 'view cpd',
@@ -45,20 +45,19 @@ class RolePermissionSeeder extends Seeder
                 'view events',
             ],
 
-            'Support Staff' => [
+            'support-staff' => [
                 'view tickets',
                 'manage tickets',
                 'manage policies',
             ],
 
-            'Guest' => [
+            'guest' => [
                 'view policies',
                 'view news',
                 'view events',
             ],
         ];
 
-        $now = now();
         $pivotInsert = [];
 
         foreach ($rolePermissionsMap as $roleName => $permissionNames) {
