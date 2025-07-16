@@ -20,15 +20,19 @@ class RegisterController extends Controller
      */
     public function register(Request $request)
     {
-        $validator = $this->validator($request->all());
+        try {
+            $validator = $this->validator($request->all());
 
-        if ($validator->fails()) {
-            return ApiResponse::error('Validation failed', 422, $validator->errors());
+            if ($validator->fails()) {
+                return ApiResponse::error('Validation failed', 422, $validator->errors());
+            }
+
+            $user = $this->create($request->all());
+
+            return $this->registered($request, $user);
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
         }
-
-        $user = $this->create($request->all());
-
-        return $this->registered($request, $user);
     }
 
     /**
@@ -65,6 +69,7 @@ class RegisterController extends Controller
 
             $user->credentials()->create([
                 'password' => $data['password'],
+                'email' => $data['email']
             ]);
 
             return $user;

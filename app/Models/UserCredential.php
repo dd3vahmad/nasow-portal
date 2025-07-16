@@ -10,7 +10,7 @@ class UserCredential extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'password', 'email_verified_at'];
+    protected $fillable = ['user_id', 'password', 'email', 'email_verified_at'];
 
     /* Mutators */
     public function setPasswordAttribute($raw)
