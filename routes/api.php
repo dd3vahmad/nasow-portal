@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
@@ -15,7 +16,7 @@ Route::get('oauth/{provider}/back', [OAuthController::class, 'callback']);
 
 /* Protected (token) */
 Route::middleware(['auth:sanctum'])->group(function () {
-    Route::get('/profile', fn (Request $r) => $r->user());
+    Route::get('/me', [UserController::class, 'me']);
 
     // Route::middleware('role:national-admin')->get('/admin/metrics', function () {
     //     return ['status' => 'top secret'];
