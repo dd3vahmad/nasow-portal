@@ -63,21 +63,6 @@ class LoginController extends Controller {
     }
 
     /**
-     * Verify user email
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function verifyEmail(Request $request) {
-        try {
-            $code = $request->code;
-            return ApiResponse::success('Email verification successful');
-        } catch (\Throwable $th) {
-            return ApiResponse::error($th->getMessage());
-        }
-    }
-
-    /**
      * Log the user out of the application.
      *
      * @return \Illuminate\Http\JsonResponse
