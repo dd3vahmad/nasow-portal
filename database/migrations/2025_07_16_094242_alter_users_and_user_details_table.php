@@ -6,31 +6,36 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table("users", function (Blueprint $table) {
-            $table->dropColumn("role_id");
+            if (Schema::hasColumn('users', 'role_id')) {
+                $table->dropColumn('role_id');
+            }
         });
 
         Schema::table("user_details", function (Blueprint $table) {
-            $table->dropColumn("category");
+            if (Schema::hasColumn('user_details', 'category')) {
+                $table->dropColumn("category");
+            }
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table("users", function (Blueprint $table) {
-            $table->foreignId("role_id")->references("id")->on("users");
+            if (!Schema::hasColumn('users', 'role_id')) {
+                $table->foreignId("role_id")
+                      ->nullable()
+                      ->constrained("roles")
+                      ->cascadeOnDelete();
+            }
         });
 
         Schema::table("user_details", function (Blueprint $table) {
-            $table->enum("category", ["STUD", "ASSOC", "PROF"]);
+            if (!Schema::hasColumn('user_details', 'category')) {
+                $table->enum("category", ["STUD", "ASSOC", "PROF"]);
+            }
         });
     }
 };
