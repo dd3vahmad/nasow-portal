@@ -22,45 +22,7 @@ return new class extends Migration
             $table->string('address');
             $table->string('phone');
             $table->enum('category', ['PROF', 'ASSOC', 'STUD']);
-            $table->enum('state', [
-                'abia',
-                'adamawa',
-                'akwa_ibom',
-                'anambra',
-                'bauchi',
-                'bayelsa',
-                'benue',
-                'borno',
-                'cross_river',
-                'delta',
-                'ebonyi',
-                'edo',
-                'ekiti',
-                'enugu',
-                'gombe',
-                'imo',
-                'jigawa',
-                'kaduna',
-                'kano',
-                'katsina',
-                'kebbi',
-                'kogi',
-                'kwara',
-                'lagos',
-                'nasarawa',
-                'niger',
-                'ogun',
-                'ondo',
-                'osun',
-                'oyo',
-                'plateau',
-                'rivers',
-                'sokoto',
-                'taraba',
-                'yobe',
-                'zamfara',
-                'abuja'
-            ]);
+            $table->enum('state', config('states'));
             $table->foreignId('user_id')->unique()->references('id')->on('users');
             $table->timestamps();
         });
