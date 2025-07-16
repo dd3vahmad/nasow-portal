@@ -3,6 +3,7 @@
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserDetailsController;
 use App\Http\Controllers\UserEducationsController;
+use App\Http\Controllers\UserEmploymentsController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\OAuthController;
@@ -20,6 +21,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/me', [UserController::class, 'me']);
     Route::post('/details', [UserDetailsController::class, 'store']);
     Route::post('/educations', [UserEducationsController::class, 'store']);
+    Route::post('/employments', [UserEmploymentsController::class, 'store']);
 
     // Route::middleware('role:national-admin')->get('/admin/metrics', function () {
     //     return ['status' => 'top secret'];
