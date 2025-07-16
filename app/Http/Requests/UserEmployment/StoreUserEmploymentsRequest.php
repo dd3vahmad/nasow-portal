@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\UserEducations;
+namespace App\Http\Requests\UserEmployment;
 
 use App\Http\Requests\BaseRequest;
 
-class StoreUserEducationsRequest extends BaseRequest {
+class StoreUserEmploymentsRequest extends BaseRequest {
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -22,19 +22,20 @@ class StoreUserEducationsRequest extends BaseRequest {
      */
     public function rules()
     {
-        $maxGraduationYear = date('Y') + 5;
+        $maxEmploymentYear = now()->year;
 
         return [
             '*' => 'required|array|min:1',
-            '*.institution' => 'required|string|max:50',
-            '*.course_of_study' => 'required|string|max:50',
-            '*.qualification' => 'required|string|max:50',
-            '*.year_of_graduation' => [
+            '*.employer' => 'required|string|max:50',
+            '*.role' => 'required|string|max:50',
+            '*.employer_address' => 'required|string|max:255',
+            '*.is_current' => 'required|boolean',
+            '*.year' => [
                 'required',
                 'integer',
                 'min:1900',
-                'max:' . $maxGraduationYear,
-            ],
+                'max:' . $maxEmploymentYear
+            ]
         ];
     }
 }
