@@ -1,5 +1,7 @@
 <?php
 
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+
 return [
 
     /*
@@ -40,6 +42,23 @@ return [
     */
 
     'debug' => (bool) env('APP_DEBUG', false),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Third Party Application Providers and Aliases
+    |--------------------------------------------------------------------------
+    |
+    | Specifies third-party providers and their aliases as services of the application.
+    |
+    */
+
+    'provider' => [
+        CloudinaryLabs\CloudinaryLaravel\CloudinaryServiceProvider::class,
+    ],
+
+    'aliases' => [
+        'Cloudinary' => CloudinaryLabs\CloudinaryLaravel\CloudinaryServiceProvider::class
+    ],
 
     /*
     |--------------------------------------------------------------------------
