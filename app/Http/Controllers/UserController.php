@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\UserDetails\StoreUserDetailsRequest;
+use App\Http\Requests\UserEducations\StoreUserEducationsRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\UserDetails;
 use App\Models\UserMemberships;
@@ -22,8 +23,22 @@ class UserController extends Controller
     public function me(Request $request) {
         try {
             $user = Auth::user();
+            $details = UserDetails::where('user_id', $user->id)->first();
+            $user_details = [
+                'id' => $user->id,
+                'first_name' => $details->first_name,
+                'last_name' => $details->last_name,
+                'other_name' => $details->other_name,
+                'gender' => $details->gender,
+                'dob' => $details->dob,
+                'address' => $details->address,
+                'specialization' => $details->specialization,
+                'state' => $details->state,
+                'phone' => $details->phone,
+                'reg_status' => $user->reg_status,
+            ];
 
-            return ApiResponse::success('User details fetched successfully', $user);
+            return ApiResponse::success('User details fetched successfully', $user_details);
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
         }
@@ -90,7 +105,7 @@ class UserController extends Controller
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function add_educations(Request $request) {
+    public function add_educations(StoreUserEducationsRequest $request) {
         try {
             $user = Auth::user();
             $educations = [];
