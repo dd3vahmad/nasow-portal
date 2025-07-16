@@ -17,6 +17,7 @@ Route::get('oauth/{provider}/back', [OAuthController::class, 'callback']);
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/me', [UserController::class, 'me']);
     Route::post('/details', [UserController::class, 'store']);
+    Route::post('/educations', [UserController::class, 'store']);
 
     // Route::middleware('role:national-admin')->get('/admin/metrics', function () {
     //     return ['status' => 'top secret'];

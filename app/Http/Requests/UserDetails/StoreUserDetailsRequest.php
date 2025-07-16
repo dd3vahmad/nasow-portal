@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Requests\User;
+namespace App\Http\Requests\UserDetails;
 
 use App\Http\Requests\BaseRequest;
 use Illuminate\Validation\Rule;
 
-class StoreUserRequest extends BaseRequest {
+class StoreUserDetailsRequest extends BaseRequest {
     /**
      * Determine if the user is authorized to make this request.
      *

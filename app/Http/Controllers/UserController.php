@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\User\StoreUserRequest;
+use App\Http\Requests\UserDetails\StoreUserDetailsRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\UserDetails;
 use App\Models\UserMemberships;
@@ -35,7 +35,7 @@ class UserController extends Controller
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function store(StoreUserRequest $request) {
+    public function store(StoreUserDetailsRequest $request) {
         try {
             $user = Auth::user();
 
@@ -82,5 +82,21 @@ class UserController extends Controller
         $membership_no = $generator->generate($category);
 
         return UserMemberships::createOrFirst([ 'no' => $membership_no, 'category' => $category, 'user_id' => $user_id ])->first();
+    }
+
+    /**
+     * Add user educations
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function add_educations(Request $request) {
+        try {
+            $user = Auth::user();
+            $educations = [];
+            return ApiResponse::success('Educations added successfully', $educations);
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
     }
 }
