@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('user_credentials', function (Blueprint $table) {
             $table->id();
             $table->string('password');
-            $table->dateTime('email_verified_at');
+            $table->dateTime('email_verified_at')->nullable();
             $table->foreignId('user_id')->unique()->references('id')->on('users');
             $table->timestamps();
         });
