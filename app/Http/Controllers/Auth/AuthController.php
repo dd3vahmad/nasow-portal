@@ -9,33 +9,6 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    /* Register (email + password) */
-    public function register(Request $request)
-    {
-        $data = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users',
-            'password' => 'required|string|min:8',
-        ]);
-
-        $user = User::create([
-            'name'        => $data['name'],
-            'email'       => $data['email'],
-            'reg_status'  => 'local',
-        ]);
-
-        $user->credentials()->create([
-            'password' => $data['password'],
-        ]);
-
-        // send verification email
-        $user->sendEmailVerificationNotification();
-
-        return response()->json([
-            'message' => 'Registered. Please verify your email.',
-        ], 201);
-    }
-
     /* Login (email + password) */
     public function login(Request $request)
     {

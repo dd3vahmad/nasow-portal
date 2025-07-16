@@ -4,10 +4,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\OAuthController;
+use App\Http\Controllers\Auth\RegisterController;
 
 /* Public (unauthenticated) */
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login',    [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [RegisterController::class, 'register']);
 
 Route::get('oauth/{provider}',      [OAuthController::class, 'redirect']);
 Route::get('oauth/{provider}/back', [OAuthController::class, 'callback']);
@@ -16,9 +17,9 @@ Route::get('oauth/{provider}/back', [OAuthController::class, 'callback']);
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/profile', fn (Request $r) => $r->user());
 
-    Route::middleware('role:national-admin')->get('/admin/metrics', function () {
-        return ['status' => 'top secret'];
-    });
+    // Route::middleware('role:national-admin')->get('/admin/metrics', function () {
+    //     return ['status' => 'top secret'];
+    // });
 
     Route::post('/logout', [AuthController::class, 'logout']);
 });
