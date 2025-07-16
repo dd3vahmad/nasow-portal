@@ -1,0 +1,33 @@
+<?php
+
+namespace App\Http\Requests\UserDocuments;
+
+use App\Http\Requests\BaseRequest;
+
+class StoreUserDocumentsRequest extends BaseRequest {
+    /**
+     * Determine if the user is authorized to make this request.
+     *
+     * @return bool
+     */
+    public function authorize()
+    {
+        return auth()->check();
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, mixed>
+     */
+    public function rules()
+    {
+        $maxEmploymentYear = now()->year;
+
+        return [
+            '' => 'required|array|min:1',
+            '*.name' => 'required|string|max:50',
+            '*.resource' => 'required|file|mimes:pdf,doc,docx|max:2048',
+        ];
+    }
+}
