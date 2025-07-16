@@ -12,11 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table("users", function (Blueprint $table) {
-            $table->removeColumn("role_id");
+            $table->dropColumn("role_id");
         });
 
         Schema::table("user_details", function (Blueprint $table) {
-            $table->removeColumn("category");
+            $table->dropColumn("category");
         });
     }
 
