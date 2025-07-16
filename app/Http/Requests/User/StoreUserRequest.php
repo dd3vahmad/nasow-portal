@@ -23,8 +23,6 @@ class StoreUserRequest extends BaseRequest {
      */
     public function rules()
     {
-        $categories = ['PROF', 'ASSOC', 'STUD'];
-
         return [
             'first_name' => 'required|string|max:50',
             'last_name' => 'required|string|max:50',
@@ -35,7 +33,7 @@ class StoreUserRequest extends BaseRequest {
             'address' => 'required|string|max:225',
             'phone' => 'required|string|max:50',
             'state' => ['required', 'string', Rule::in(config('states'))],
-            'category' => ['required', 'string', Rule::in($categories)],
+            'category' => ['required', 'string', Rule::in(config('member_categories'))],
         ];
     }
 
