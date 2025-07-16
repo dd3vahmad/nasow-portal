@@ -52,10 +52,11 @@ class UserController extends Controller
                 'user_id' => $user->id,
             ];
 
-            $user = UserDetails::createOrFirst($details)->first();
+            $user_details = UserDetails::createOrFirst($details);
             $this->createMembership($request->category, $user->id);
+            $user->update(['reg_status' => 'education']);
 
-            return ApiResponse::success('User details added successfully', $user);
+            return ApiResponse::success('User details added successfully', $user_details);
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
         }
@@ -68,8 +69,13 @@ class UserController extends Controller
      * @return UserMemberships
      */
     protected function createMembership(string $category, int $user_id) {
-        if (!in_array($category, config('membership_categories'))) {
+        if (!in_array($category, config('member_categories'))) {
             throw new Exception("Invalid category", 1);
+        }
+
+        $existing_membership = UserMemberships::where('user_id', $user_id)->active()->first();
+        if ($existing_membership) {
+            throw new Exception("You have an active membership. Kindly revoke it before continuing?", 1);
         }
 
         $generator = new MembershipNumberGenerator();
