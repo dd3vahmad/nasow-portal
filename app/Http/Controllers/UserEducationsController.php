@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\UserEducations\StoreUserEducationsRequest;
 use App\Http\Responses\ApiResponse;
-use App\Models\UserEducation;
+use App\Models\UserEducations;
 use Illuminate\Support\Facades\Auth;
 
 class UserEducationsController extends Controller
@@ -26,7 +26,7 @@ class UserEducationsController extends Controller
             foreach ($educationsPayload as $educationData) {
                 $educationData['user_id'] = $user->id;
 
-                $education = UserEducation::create($educationData);
+                $education = UserEducations::create($educationData);
 
                 $savedEducations[] = $education;
             }
