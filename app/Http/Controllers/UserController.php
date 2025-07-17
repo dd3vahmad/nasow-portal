@@ -19,19 +19,23 @@ class UserController extends Controller
         try {
             $user = Auth::user();
             $details = UserDetails::where('user_id', $user->id)->first();
-            $user_details = [
-                'id' => $user->id,
-                'first_name' => $details->first_name,
-                'last_name' => $details->last_name,
-                'other_name' => $details->other_name,
-                'gender' => $details->gender,
-                'dob' => $details->dob,
-                'address' => $details->address,
-                'specialization' => $details->specialization,
-                'state' => $details->state,
-                'phone' => $details->phone,
-                'reg_status' => $user->reg_status,
-            ];
+            $user_details = $user;
+
+            if ($details) {
+                $user_details = [
+                    'id' => $user->id,
+                    'first_name' => $details->first_name,
+                    'last_name' => $details->last_name,
+                    'other_name' => $details->other_name,
+                    'gender' => $details->gender,
+                    'dob' => $details->dob,
+                    'address' => $details->address,
+                    'specialization' => $details->specialization,
+                    'state' => $details->state,
+                    'phone' => $details->phone,
+                    'reg_status' => $user->reg_status,
+                ];
+            }
 
             return ApiResponse::success('User details fetched successfully', $user_details);
         } catch (\Throwable $th) {
