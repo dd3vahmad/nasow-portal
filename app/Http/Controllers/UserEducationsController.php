@@ -30,6 +30,7 @@ class UserEducationsController extends Controller
 
                 $savedEducations[] = $education;
             }
+            $user->update(['reg_status' => 'employment']);
 
             return ApiResponse::success('Educations added successfully', $savedEducations);
         } catch (\Throwable $th) {

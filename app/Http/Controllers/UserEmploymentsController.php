@@ -30,6 +30,7 @@ class UserEmploymentsController extends Controller
 
                 $savedEmployments[] = $employment;
             }
+            $user->update(['reg_status' => 'specialization']);
 
             return ApiResponse::success('Employments added successfully', $savedEmployments);
         } catch (\Throwable $th) {

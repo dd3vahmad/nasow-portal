@@ -22,7 +22,6 @@ class UserDocumentsController extends Controller
             $user = Auth::user();
 
             $documents = $request->validated();
-            dd($documents);
 
             $savedDocuments = [];
 
@@ -44,6 +43,7 @@ class UserDocumentsController extends Controller
 
                 $savedDocuments[] = $saved;
             }
+            $user->update(['reg_status' => 'review']);
 
             return ApiResponse::success('User documents uploaded and saved successfully.', $savedDocuments);
         } catch (\Throwable $th) {

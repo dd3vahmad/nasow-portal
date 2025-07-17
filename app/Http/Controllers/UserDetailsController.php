@@ -89,6 +89,7 @@ class UserDetailsController extends Controller
             $user = Auth::user();
             $user_details = UserDetails::where('user_id', $user->id)->first();
             $user_details->update(['specialization' => $specialization]);
+            $user->update(['reg_status' => 'documents']);
 
             return ApiResponse::success('Area of specialization added successfully', $user_details);
         } catch (\Throwable $th) {
