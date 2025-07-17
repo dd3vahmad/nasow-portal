@@ -55,12 +55,18 @@ DB_DATABASE=your_database
 DB_USERNAME=your_username
 DB_PASSWORD=your_password
 
+-- Use the one in the .env.example
 MAIL_MAILER=smtp
-MAIL_HOST=smtp.mailtrap.io
+MAIL_HOST=smtp.google.com
 MAIL_PORT=2525
 MAIL_USERNAME=null
 MAIL_PASSWORD=null
 MAIL_ENCRYPTION=null
+
+CLOUDINARY_URL=cloudinary://<API_KEY>:<API_SECRET>@<CLOUD_NAME>
+CLOUDINARY_CLOUD_NAME=<CLOUDNAME>
+CLOUDINARY_API_KEY=<API_KEY>
+CLOUDINARY_API_SECRET=<API_SECRET>
 
 ```
 
