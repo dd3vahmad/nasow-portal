@@ -99,4 +99,24 @@ class MembershipController extends Controller {
             return ApiResponse::error($th->getMessage());
         }
     }
+
+    /**
+     * Delete membership
+     *
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function delete(int $id) {
+        try {
+            $membership = UserMemberships::find($id);
+            if (!$membership) {
+                throw new \Exception('Membership not found');
+            }
+            $membership->delete();
+
+            return ApiResponse::success('Membership deleted successfully', $membership);
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
 }
