@@ -41,6 +41,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/verify-member', [UserDetailsController::class, 'verifyMember']);
             Route::get('/all-members', [MembershipController::class, 'index']);
         });
+
+        /** National-Admin & State-Admin Only Routes */
+        Route::middleware('role:national-admin|guest')->group(function() {
+            Route::get('/members/{id}', [MembershipController::class, 'view']);
+        });
     });
 
 
