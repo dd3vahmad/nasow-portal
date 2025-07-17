@@ -46,7 +46,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         /** National-Admin & State-Admin Only Routes */
         Route::middleware('role:state-admin|guest')->group(function() {
             Route::get('/members/{id}', [MembershipController::class, 'view']);
-            Route::get('/membership/approve/{id}', [MembershipController::class, 'approve']);
+            Route::post('/membership/approve/{id}', [MembershipController::class, 'approve']);
+            Route::post('/membership/suspend/{id}', [MembershipController::class, 'suspend']);
         });
     });
 

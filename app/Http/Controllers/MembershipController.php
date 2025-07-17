@@ -67,7 +67,34 @@ class MembershipController extends Controller {
                 'expires_at' => $expiresAt,
             ]);
 
-            return ApiResponse::success('Membership approved successfully');
+            return ApiResponse::success('Membership approved successfully', $membership);
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
+
+    /**
+     * Suspend membership
+     *
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function suspend(int $id) {
+        try {
+            $membership = UserMemberships::find($id);
+
+            if (!$membership) {
+                throw new \Exception('Membership not found');
+            }
+
+            $suspendedAt = now();
+
+            $membership->update([
+                'status' => 'suspended',
+                'suspended_at' => $suspendedAt,
+            ]);
+
+            return ApiResponse::success('Membership suspended successfully', $membership);
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
         }
