@@ -39,10 +39,11 @@ class MembershipController extends Controller {
             $userDetails = $user->details()->first();
 
             $state = $request->query('state', $userDetails->state);
+            $status = $request->query('status', '');
 
             $members = UserMemberships::where('status', '!=', 'unverified')
-                ->whereHas('user.details', function ($query) use ($state) {
-                    $query->where('state', $state);
+                ->whereHas('user.details', function ($query) use ($state, $status) {
+                    $query->where('state', $state)->where('status', $status);
                 })
                 ->with('user.details')
                 ->get();
