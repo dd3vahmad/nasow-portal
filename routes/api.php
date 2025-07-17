@@ -37,21 +37,19 @@ Route::middleware(['auth:sanctum'])->group(function () {
         });
 
         /** National Admin Only Routes */
-        Route::middleware('role:guest')->group( function () {
-            Route::post('/verify-member', [UserDetailsController::class, 'verifyMember']);
-            Route::post('/suspend-member', [UserDetailsController::class, 'suspendMember']);
-            Route::get('/all-members', [MembershipController::class, 'index']);
+        Route::middleware('role:national-admin')->group( function () {
+            Route::put('/members/approve/{id}', [MembershipController::class, 'approve']);
+            Route::put('/members/suspend/{id}', [MembershipController::class, 'suspend']);
+            Route::get('/members', [MembershipController::class, 'index']);
         });
 
         /** National-Admin & State-Admin Only Routes */
-        Route::middleware('role:state-admin|guest')->group(function() {
+        Route::middleware('role:state-admin|national-admin')->group(function() {
+            Route::get('/members/state', [MembershipController::class, 'state']);
             Route::get('/members/{id}', [MembershipController::class, 'view']);
-            Route::put('/membership/approve/{id}', [MembershipController::class, 'approve']);
-            Route::put('/membership/suspend/{id}', [MembershipController::class, 'suspend']);
             Route::delete('/membership/{id}', [MembershipController::class, 'delete']);
         });
     });
-
 
     Route::post('/logout', [LoginController::class, 'logout']);
 });

@@ -7,6 +7,7 @@ use App\Http\Resources\MembersResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\UserMemberships;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class MembershipController extends Controller {
     /**
@@ -18,6 +19,33 @@ class MembershipController extends Controller {
     public function index(Request $request) {
         try {
             $members = UserMemberships::whereNot('status', 'unverified')->with(['user.details'])->get();
+
+            return ApiResponse::success('Members fetched successfully', MembersResource::collection($members));
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
+
+    /**
+     * Get state members
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function state(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            $userDetails = $user->details()->first();
+
+            $state = $request->query('state', $userDetails->state);
+
+            $members = UserMemberships::where('status', '!=', 'unverified')
+                ->whereHas('user.details', function ($query) use ($state) {
+                    $query->where('state', $state);
+                })
+                ->with('user.details')
+                ->get();
 
             return ApiResponse::success('Members fetched successfully', MembersResource::collection($members));
         } catch (\Throwable $th) {
