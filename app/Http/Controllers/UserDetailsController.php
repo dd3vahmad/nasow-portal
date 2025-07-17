@@ -25,20 +25,20 @@ class UserDetailsController extends Controller
             $detailsPayload = $request->validated();
 
             $details = [
-                'first_name' => $detailsPayload->first_name,
-                'last_name' => $detailsPayload->last_name,
-                'other_name' => $detailsPayload->other_name,
-                'gender' => $detailsPayload->gender,
-                'dob' => $detailsPayload->dob,
-                'specialization' => $detailsPayload->specialization,
-                'address' => $detailsPayload->address,
-                'phone' => $detailsPayload->phone,
-                'state' => $detailsPayload->state,
+                'first_name' => $detailsPayload['first_name'],
+                'last_name' => $detailsPayload['last_name'],
+                'other_name' => $detailsPayload['other_name'],
+                'gender' => $detailsPayload['gender'],
+                'dob' => $detailsPayload['dob'],
+                'specialization' => $detailsPayload['specialization'],
+                'address' => $detailsPayload['address'],
+                'phone' => $detailsPayload['phone'],
+                'state' => $detailsPayload['state'],
                 'user_id' => $user->id,
             ];
 
             $user_details = UserDetails::createOrFirst($details);
-            $this->createMembership($detailsPayload->category, $user->id);
+            $this->createMembership($detailsPayload['category'], $user->id);
             $user->update(['reg_status' => 'education']);
 
             return ApiResponse::success('User details added successfully', $user_details);
