@@ -57,10 +57,10 @@ class VerifyEmail extends Notification
 
         return (new MailMessage)
             ->subject('Please Confirm Your Email Address')
-            ->greeting('Hello ' . $notifiable->name . ',')
-            ->line('Thanks for signing up! Please confirm your email address by clicking the button below.')
-            ->action('Confirm Email', $this->verificationUrl($notifiable))
-            ->line('If you didn’t request this, you can safely ignore it.');
+            ->view('emails.verify-email', [
+                'user' => $notifiable,
+                'url'  => $this->verificationUrl($notifiable),
+            ]);
     }
 
     /**
