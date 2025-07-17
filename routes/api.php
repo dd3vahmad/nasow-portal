@@ -37,7 +37,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         });
 
         /** National Admin Only Routes */
-        Route::middleware('role:national-admin')->group( function () {
+        Route::middleware('role:guest')->group( function () {
             Route::post('/verify-member', [UserDetailsController::class, 'verifyMember']);
             Route::get('/all-members', [MembershipController::class, 'index']);
         });
