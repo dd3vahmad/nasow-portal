@@ -37,6 +37,7 @@ class LoginController extends Controller {
             }
 
             $token = (string) $user->createToken('x-auth-token', ['*'])->plainTextToken;
+            $user->update(['last_login' => now()]);
 
             return ApiResponse::success('Login successful', [
                 'token' => $token,
