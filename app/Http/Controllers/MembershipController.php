@@ -43,4 +43,33 @@ class MembershipController extends Controller {
             return ApiResponse::error($th->getMessage());
         }
     }
+
+    /**
+     * Approve membership
+     *
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function approve(int $id) {
+        try {
+            $membership = UserMemberships::find($id);
+
+            if (!$membership) {
+                throw new \Exception('Membership not found');
+            }
+
+            $verifiedAt = now();
+            $expiresAt = $verifiedAt->copy()->addYear();
+
+            $membership->update([
+                'status' => 'verified',
+                'verified_at' => $verifiedAt,
+                'expires_at' => $expiresAt,
+            ]);
+
+            return ApiResponse::success('Membership approved successfully');
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
 }

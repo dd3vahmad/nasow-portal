@@ -39,12 +39,14 @@ Route::middleware(['auth:sanctum'])->group(function () {
         /** National Admin Only Routes */
         Route::middleware('role:guest')->group( function () {
             Route::post('/verify-member', [UserDetailsController::class, 'verifyMember']);
+            Route::post('/suspend-member', [UserDetailsController::class, 'suspendMember']);
             Route::get('/all-members', [MembershipController::class, 'index']);
         });
 
         /** National-Admin & State-Admin Only Routes */
-        Route::middleware('role:national-admin|guest')->group(function() {
+        Route::middleware('role:state-admin|guest')->group(function() {
             Route::get('/members/{id}', [MembershipController::class, 'view']);
+            Route::get('/membership/approve/{id}', [MembershipController::class, 'approve']);
         });
     });
 
