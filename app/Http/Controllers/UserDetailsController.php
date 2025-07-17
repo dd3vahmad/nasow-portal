@@ -96,4 +96,31 @@ class UserDetailsController extends Controller
             return ApiResponse::error($th->getMessage());
         }
     }
+
+    /**
+     * Confirm membership
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function confirmMembership(Request $request) {
+        try {
+            $user = Auth::user();
+            if ($user->reg_status !== "review") {
+                throw new Exception('Complete membership details before confirming', 1);
+            }
+
+            $unverified_membership = UserMemberships::where('user_id', $user->id)->where('status', 'unverified')->active()->first();
+            if (!$unverified_membership) {
+                throw new Exception("You do not have an active and unverified membership.", 1);
+            }
+
+            $unverified_membership->update([ 'status' => 'pending' ]);
+            $user->update(['reg_status' => 'done']);
+
+            return ApiResponse::success('User membership confirmed successfully');
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
 }

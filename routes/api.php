@@ -31,6 +31,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/employments', [UserEmploymentsController::class, 'store']);
         Route::post('/specialization', [UserDetailsController::class, 'add_specialization']);
         Route::post('/documents', [UserDocumentsController::class, 'store']);
+        Route::post('/confirm-membership', [UserDetailsController::class, 'confirmMembership']);
     });
 
     // Route::middleware('role:national-admin')->get('/admin/metrics', function () {
