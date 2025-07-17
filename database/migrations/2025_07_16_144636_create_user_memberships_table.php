@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('no');
             $table->enum('category',config('member_categories'));
-            $table->enum('status', ['unverified', 'pending', 'verified'])->default('unverified');
+            $table->enum('status', ['unverified', 'pending', 'verified', 'suspended'])->default('unverified');
             $table->dateTime('verified_at')->nullable();
             $table->dateTime('expires_at')->nullable();
             $table->foreignId('user_id')->references('id')->on('users');

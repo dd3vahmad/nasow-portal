@@ -15,7 +15,7 @@ return new class extends Migration
             if (Schema::hasColumn('user_employments', 'year')) {
                 $table->dropColumn('year');
             }
-            $table->integer('year');
+            $table->integer('year')->nullable();
         });
     }
 
@@ -28,7 +28,7 @@ return new class extends Migration
             if (Schema::hasColumn('user_employments', 'year')) {
                 $table->dropColumn('year');
             }
-            $table->dateTime('year');
+            $table->dateTime('year')->nullable();
         });
     }
 };

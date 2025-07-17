@@ -15,15 +15,25 @@ class UserController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function me(Request $request) {
+    public function me(Request $request)
+    {
         try {
             $user = Auth::user();
+            $role = $user->getRoleNames()->first();
+
             $details = UserDetails::where('user_id', $user->id)->first();
-            $user_details = $user;
+
+            $user_details = [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $role,
+                'last_login' => $user->last_login,
+                'reg_status' => $user->reg_status,
+            ];
 
             if ($details) {
-                $user_details = [
-                    'id' => $user->id,
+                $user_details = array_merge($user_details, [
                     'first_name' => $details->first_name,
                     'last_name' => $details->last_name,
                     'other_name' => $details->other_name,
@@ -33,8 +43,7 @@ class UserController extends Controller
                     'specialization' => $details->specialization,
                     'state' => $details->state,
                     'phone' => $details->phone,
-                    'reg_status' => $user->reg_status,
-                ];
+                ]);
             }
 
             return ApiResponse::success('User details fetched successfully', $user_details);
