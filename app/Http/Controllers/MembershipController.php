@@ -20,9 +20,16 @@ class MembershipController extends Controller {
         try {
             $state = $request->query('state', '');
 
-            $baseQuery = UserMemberships::whereHas('user.details', function ($query) use ($state) {
-                $query->where('state', $state);
-            });
+            $baseQuery = UserMemberships::whereHas('user', function ($query) {
+                    $query->whereHas('role', function ($roleQuery) {
+                        $roleQuery->where('name', 'member');
+                    });
+                })
+                ->whereHas('user.details', function ($query) use ($state) {
+                    if ($state) {
+                        $query->where('state', $state);
+                    }
+                });
 
             $totalMembers = (clone $baseQuery)->count();
             $pendingMembers = (clone $baseQuery)->where('status', 'pending')->count();
@@ -50,7 +57,13 @@ class MembershipController extends Controller {
      */
     public function index(Request $request) {
         try {
-            $members = UserMemberships::whereNot('status', 'unverified')->with(['user.details'])->get();
+            $members = UserMemberships::whereHas('user', function ($query) {
+                    $query->whereHas('role', function ($roleQuery) {
+                        $roleQuery->where('name', 'member');
+                    });
+                })
+                ->with(['user.details'])
+                ->get();
 
             return ApiResponse::success('Members fetched successfully', MembersResource::collection($members));
         } catch (\Throwable $th) {
@@ -71,11 +84,18 @@ class MembershipController extends Controller {
             $userDetails = $user->details()->first();
 
             $state = $request->query('state', $userDetails->state);
-            $status = $request->query('status', '');
+            $status = $request->query('status'); // can be null
 
-            $members = UserMemberships::where('status', '!=', 'unverified')
-                ->whereHas('user.details', function ($query) use ($state, $status) {
-                    $query->where('state', $state)->where('status', $status);
+            $members = UserMemberships::whereHas('user', function ($query) {
+                    $query->whereHas('role', function ($roleQuery) {
+                        $roleQuery->where('name', 'member');
+                    });
+                })
+                ->whereHas('user.details', function ($query) use ($state) {
+                    $query->where('state', $state);
+                })
+                ->when($status, function ($query, $status) {
+                    return $query->where('status', $status);
                 })
                 ->with('user.details')
                 ->get();
@@ -127,6 +147,8 @@ class MembershipController extends Controller {
                 'verified_at' => $verifiedAt,
                 'expires_at' => $expiresAt,
             ]);
+            $user = $membership->user();
+            $user->assignRole('member');
 
             return ApiResponse::success('Membership approved successfully', $membership);
         } catch (\Throwable $th) {
