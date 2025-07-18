@@ -11,6 +11,38 @@ use Illuminate\Support\Facades\Auth;
 
 class MembershipController extends Controller {
     /**
+     *  Get all members stats (counts)
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function stats(Request $request) {
+        try {
+            $state = $request->query('state', '');
+
+            $baseQuery = UserMemberships::whereHas('user.details', function ($query) use ($state) {
+                $query->where('state', $state);
+            });
+
+            $totalMembers = (clone $baseQuery)->count();
+            $pendingMembers = (clone $baseQuery)->where('status', 'pending')->count();
+            $approvedMembers = (clone $baseQuery)->where('status', 'verified')->count();
+            $suspendedMembers = (clone $baseQuery)->where('status', 'suspended')->count();
+
+            $stats = [
+                'total' => $totalMembers,
+                'pending' => $pendingMembers,
+                'approved' => $approvedMembers,
+                'suspended' => $suspendedMembers,
+            ];
+
+            return ApiResponse::success('Members stats fetched successfully', $stats);
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
+
+    /**
      * Get all members
      *
      * @param \Illuminate\Http\Request $request

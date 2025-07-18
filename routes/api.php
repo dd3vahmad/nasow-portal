@@ -45,6 +45,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         /** National-Admin & State-Admin Only Routes */
         Route::middleware('role:state-admin|national-admin')->group(function() {
+            Route::get('/members/stats', [MembershipController::class, 'stats']);
             Route::get('/members/state', [MembershipController::class, 'state']);
             Route::get('/members/{id}', [MembershipController::class, 'view']);
             Route::delete('/membership/{id}', [MembershipController::class, 'delete']);
