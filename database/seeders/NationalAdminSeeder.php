@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 
 class NationalAdminSeeder extends Seeder
@@ -25,7 +26,7 @@ class NationalAdminSeeder extends Seeder
 
             $user->credentials()->create([
                 'email' => $user->email,
-                'password' => bcrypt('@Olamilekan1'),
+                'password' => '@Olamilekan1',
                 'email_verified_at' => now(),
             ]);
 
