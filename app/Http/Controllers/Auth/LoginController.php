@@ -28,6 +28,10 @@ class LoginController extends Controller {
             }
             $validated = $validator->validated();
             $user = User::where('email', $validated['email'])->first();
+            if (!$user) {
+                return ApiResponse::error('User with this email does not exist.', 404);
+            }
+
             $cred = $user->credentials;
 
             if (!$user || !$cred || !Hash::check($validated['password'], $cred->password)) {
