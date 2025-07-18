@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\RoleType;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\User;
+use App\Models\UserDetails;
+use App\Models\UserMemberships;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -12,6 +16,61 @@ use Illuminate\Support\Facades\DB;
 
 class RegisterController extends Controller
 {
+    /**
+     * Handle a admin registration request for the application.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function registerAdmin(Request $request)
+    {
+        try {
+            $validated = $request->validated();
+            $avatar = $validated['avatar'];
+            $role = match ($validated['as']) {
+                'national' => RoleType::NationalAdmin->value,
+                'state' => RoleType::StateAdmin->value,
+                default => RoleType::SupportStaff->value,
+            };
+
+            $user = User::create([
+                'name' => $validated['first_name'] . ' ' . $validated['last_name'],
+                'email' => $validated['email'],
+                'reg_status' => 'done',
+            ]);
+
+            if ($avatar) {
+                $result = Cloudinary::uploadFile($avatar->getRealPath(), [
+                    'folder' => 'users_avatars/',
+                    'resource_type' => 'auto',
+                ]);
+                $secureUrl = $result->getSecurePath();
+                $user->update([ 'avatar_url' => $secureUrl ]);
+            }
+
+            $user->credentials()->create([
+                'email' => $user->email,
+                'password' => $validated['password'],
+                'email_verified_at' => now(),
+            ]);
+            $user->assignRole($role);
+
+            $user->details()->create([
+                'first_name' => $validated['first_name'],
+                'last_name' => $validated['last_name'],
+                'gender' => $validated['gender'],
+                'dob' => $validated['dob'],
+                'address' => $validated['address'],
+                'phone' => $validated['phone'],
+                'state' => $validated['state'],
+            ]);
+
+            return ApiResponse::success('Admin registered successfully', $user);
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
+
     /**
      * Handle a registration request for the application.
      *

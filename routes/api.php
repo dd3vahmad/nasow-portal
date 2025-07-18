@@ -15,6 +15,7 @@ use App\Http\Controllers\MembershipController;
 /* Public (unauthenticated) */
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/register', [RegisterController::class, 'register']);
+Route::post('/register/admin', [RegisterController::class, 'registerAdmin']);
 
 Route::get('oauth/{provider}',      [OAuthController::class, 'redirect']);
 Route::get('oauth/{provider}/back', [OAuthController::class, 'callback']);
