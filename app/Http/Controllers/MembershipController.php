@@ -20,11 +20,7 @@ class MembershipController extends Controller {
         try {
             $state = $request->query('state', '');
 
-            $baseQuery = UserMemberships::whereHas('user', function ($query) {
-                    $query->whereHas('role', function ($roleQuery) {
-                        $roleQuery->where('name', 'member');
-                    });
-                })
+            $baseQuery = UserMemberships::whereHas('user', fn ($query) => $query->role('member', 'api'))
                 ->whereHas('user.details', function ($query) use ($state) {
                     if ($state) {
                         $query->where('state', $state);
@@ -57,11 +53,7 @@ class MembershipController extends Controller {
      */
     public function index(Request $request) {
         try {
-            $members = UserMemberships::whereHas('user', function ($query) {
-                    $query->whereHas('role', function ($roleQuery) {
-                        $roleQuery->where('name', 'member');
-                    });
-                })
+            $members = UserMemberships::whereHas('user', fn ($q) => $q->role('member', 'api'))
                 ->with(['user.details'])
                 ->get();
 
@@ -84,19 +76,15 @@ class MembershipController extends Controller {
             $userDetails = $user->details()->first();
 
             $state = $request->query('state', $userDetails->state);
-            $status = $request->query('status'); // can be null
+            $status = $request->query('status');
 
-            $members = UserMemberships::whereHas('user', function ($query) {
-                    $query->whereHas('role', function ($roleQuery) {
-                        $roleQuery->where('name', 'member');
-                    });
-                })
+            $members = UserMemberships::whereHas('user', fn ($query) => $query->role('member', 'api'))
                 ->whereHas('user.details', function ($query) use ($state) {
-                    $query->where('state', $state);
+                    if ($state) {
+                        $query->where('state', $state);
+                    }
                 })
-                ->when($status, function ($query, $status) {
-                    return $query->where('status', $status);
-                })
+                ->when($status, fn ($query) => $query->where('status', $status))
                 ->with('user.details')
                 ->get();
 
