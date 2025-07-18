@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Requests\UserDetails;
+namespace App\Http\Requests\Register;
 
 use App\Http\Requests\BaseRequest;
 use Illuminate\Validation\Rule;
 
-class StoreUserDetailsRequest extends BaseRequest {
+class RegisterAdminRequest extends BaseRequest {
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -27,13 +27,15 @@ class StoreUserDetailsRequest extends BaseRequest {
             'first_name' => 'required|string|max:50',
             'last_name' => 'required|string|max:50',
             'other_name' => 'nullable|string|max:50',
-            'specialization' => 'nullable|string|max:50',
+            'email' => 'required|email',
+            'password' => 'required|string|min:8|max:50',
             'gender' => ['required', 'string', Rule::in(['MALE', 'FEMALE'])],
             'dob' => 'required|date_format:Y-m-d',
             'address' => 'required|string|max:225',
+            'avatar' => 'nullable|file|max:2048',
             'phone' => 'required|string|max:50',
+            'as' => 'required|string|in:national,state,support',
             'state' => ['required', 'string', Rule::in(config('states'))],
-            'category' => ['required', 'string', Rule::in(config('member_categories'))],
         ];
     }
 }

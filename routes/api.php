@@ -15,7 +15,6 @@ use App\Http\Controllers\MembershipController;
 /* Public (unauthenticated) */
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/register', [RegisterController::class, 'register']);
-Route::post('/register/admin', [RegisterController::class, 'registerAdmin']);
 
 Route::get('oauth/{provider}',      [OAuthController::class, 'redirect']);
 Route::get('oauth/{provider}/back', [OAuthController::class, 'callback']);
@@ -27,6 +26,7 @@ Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 've
 /* Protected (token) */
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/me', [UserController::class, 'me']);
+
     Route::middleware(['verified'])->group(function () {
         Route::middleware('role:guest')->group( function () {
             Route::post('/details', [UserDetailsController::class, 'store']);
@@ -39,6 +39,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         /** National Admin Only Routes */
         Route::middleware('role:national-admin')->group( function () {
+            Route::post('/register/admin', [RegisterController::class, 'registerAdmin']);
             Route::put('/members/approve/{id}', [MembershipController::class, 'approve']);
             Route::put('/members/suspend/{id}', [MembershipController::class, 'suspend']);
             Route::get('/members', [MembershipController::class, 'index']);
@@ -52,6 +53,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::delete('/membership/{id}', [MembershipController::class, 'delete']);
         });
     });
-
-    Route::post('/logout', [LoginController::class, 'logout']);
 });
+
+Route::post('/logout', [LoginController::class, 'logout']);

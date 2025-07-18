@@ -30,7 +30,12 @@ class NationalAdminSeeder extends Seeder
                 'email_verified_at' => now(),
             ]);
 
-            $user->assignRole(RoleType::NationalAdmin->value);
+            $role = Role::firstOrCreate(
+                ['name' => RoleType::NationalAdmin->value],
+                ['guard_name' => 'api']
+            );
+
+            $user->assignRole($role);
 
             $user->details()->create([
                 'first_name' => 'Gbeminiyi',

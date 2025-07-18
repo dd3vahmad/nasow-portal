@@ -4,15 +4,15 @@ namespace App\Http\Controllers\Auth;
 
 use App\Enums\RoleType;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Register\RegisterAdminRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\User;
-use App\Models\UserDetails;
-use App\Models\UserMemberships;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Role;
 
 class RegisterController extends Controller
 {
@@ -22,11 +22,12 @@ class RegisterController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function registerAdmin(Request $request)
+    public function registerAdmin(RegisterAdminRequest $request)
     {
         try {
             $validated = $request->validated();
-            $avatar = $validated['avatar'];
+            $avatar = $request->avatar;
+
             $role = match ($validated['as']) {
                 'national' => RoleType::NationalAdmin->value,
                 'state' => RoleType::StateAdmin->value,
@@ -53,11 +54,17 @@ class RegisterController extends Controller
                 'password' => $validated['password'],
                 'email_verified_at' => now(),
             ]);
+
+            $role = Role::firstOrCreate(
+                ['name' => $role],
+                ['guard_name' => 'api']
+            );
             $user->assignRole($role);
 
             $user->details()->create([
                 'first_name' => $validated['first_name'],
                 'last_name' => $validated['last_name'],
+                'other_name' => $validated['other_name'],
                 'gender' => $validated['gender'],
                 'dob' => $validated['dob'],
                 'address' => $validated['address'],
