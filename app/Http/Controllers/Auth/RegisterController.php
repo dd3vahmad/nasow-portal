@@ -45,7 +45,7 @@ class RegisterController extends Controller
                     'folder' => 'users_avatars/',
                     'resource_type' => 'auto',
                 ]);
-                $secureUrl = $result;
+                $secureUrl = $result['secure_url'];
                 $user->update([ 'avatar_url' => $secureUrl ]);
             }
 

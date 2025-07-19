@@ -30,15 +30,9 @@ class UserDocumentsController extends Controller
                 throw new \Exception('Validated data is not an array.');
             }
 
-            // Debug: Inspect validated data
-            // dd($documents);
-
             $savedDocuments = [];
 
             foreach ($documents as $index => $document) {
-                // Debug: Inspect each document
-                // dd($document, $index);
-
                 if (!is_array($document) || !isset($document['resource'])) {
                     Log::warning("Skipping invalid document at index $index");
                     continue;
@@ -49,9 +43,6 @@ class UserDocumentsController extends Controller
                     throw new \Exception('Invalid or missing file at index ' . $index . ': ' . ($file ? $file->getClientOriginalName() : 'No file'));
                 }
 
-                // Debug: Inspect file
-                Log::info('File path: ' . $file->getRealPath());
-
                 // Upload to Cloudinary
                 try {
                     $result = cloudinary()->uploadApi()->upload($file->getRealPath(), [
@@ -59,11 +50,9 @@ class UserDocumentsController extends Controller
                         'resource_type' => 'auto',
                     ]);
                 } catch (ApiError $e) {
+                    var_dump('Omooo 2');
                     throw new \Exception('Cloudinary upload failed: ' . $e->getMessage());
                 }
-
-                // Debug: Inspect Cloudinary response
-                // dd($result);
 
                 // Check if result contains secure_url
                 if (!isset($result['secure_url'])) {
