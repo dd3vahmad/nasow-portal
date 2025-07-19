@@ -41,11 +41,11 @@ class RegisterController extends Controller
             ]);
 
             if ($avatar) {
-                $result = Cloudinary::uploadFile($avatar->getRealPath(), [
+                $result = Cloudinary::uploadApi()->upload($avatar->getRealPath(), [
                     'folder' => 'users_avatars/',
                     'resource_type' => 'auto',
                 ]);
-                $secureUrl = $result->getSecurePath();
+                $secureUrl = $result;
                 $user->update([ 'avatar_url' => $secureUrl ]);
             }
 
@@ -131,7 +131,11 @@ class RegisterController extends Controller
                 'reg_status' => 'verify-email',
             ]);
 
-            $user->assignRole("Guest", "guest");
+            $role = Role::firstOrCreate(
+                ['name' => 'guest'],
+                ['guard_name' => 'api']
+            );
+            $user->assignRole($role);
 
             $user->credentials()->create([
                 'password' => $data['password'],
