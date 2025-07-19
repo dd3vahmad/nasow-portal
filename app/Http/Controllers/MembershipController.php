@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\RoleType;
 use App\Http\Resources\MemberResource;
 use App\Http\Resources\MembersResource;
 use App\Http\Responses\ApiResponse;
@@ -18,7 +19,11 @@ class MembershipController extends Controller {
      */
     public function stats(Request $request) {
         try {
-            $state = $request->query('state', '');
+            $user = Auth::user();
+            $userDetails = $user->details()->first();
+
+            $state = $user->getRoleNames()[0] === RoleType::StateAdmin->value ? $userDetails->state : '';
+            $state = $request->query('state', $state);
 
             $baseQuery = UserMemberships::whereHas('user', fn ($query) => $query->where('reg_status', 'done'))
                 ->whereHas('user.details', function ($query) use ($state) {
