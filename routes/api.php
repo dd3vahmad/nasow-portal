@@ -34,7 +34,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/employments', [UserEmploymentsController::class, 'store']);
             Route::post('/specialization', [UserDetailsController::class, 'add_specialization']);
             Route::post('/documents', [UserDocumentsController::class, 'store']);
-            Route::post('/confirm-membership', [UserDetailsController::class, 'confirmMembership']);
+            Route::post('/members/confirm', [MembershipController::class, 'confirm']);
         });
 
         /** National Admin Only Routes */
@@ -50,7 +50,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/members/stats', [MembershipController::class, 'stats']);
             Route::get('/members/state', [MembershipController::class, 'state']);
             Route::get('/members/{id}', [MembershipController::class, 'view']);
-            Route::delete('/membership/{id}', [MembershipController::class, 'delete']);
+            Route::delete('/members/{id}', [MembershipController::class, 'delete']);
         });
     });
 });

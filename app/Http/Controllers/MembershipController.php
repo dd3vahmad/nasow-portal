@@ -53,7 +53,16 @@ class MembershipController extends Controller {
      */
     public function index(Request $request) {
         try {
+            $state = $request->query('state');
+            $status = $request->query('status');
+
             $members = UserMemberships::whereHas('user', fn ($q) => $q->role('member', 'api'))
+                ->whereHas('user.details', function ($query) use ($state) {
+                    if ($state) {
+                        $query->where('state', $state);
+                    }
+                })
+                ->when($status, fn ($query) => $query->where('status', $status))
                 ->with(['user.details'])
                 ->get();
 
@@ -75,7 +84,7 @@ class MembershipController extends Controller {
             $user = Auth::user();
             $userDetails = $user->details()->first();
 
-            $state = $request->query('state', $userDetails->state);
+            $state = $userDetails->state;
             $status = $request->query('status');
 
             $members = UserMemberships::whereHas('user', fn ($query) => $query->role('member', 'api'))
@@ -186,6 +195,33 @@ class MembershipController extends Controller {
             $membership->delete();
 
             return ApiResponse::success('Membership deleted successfully', $membership);
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
+
+    /**
+     * Confirm membership
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function confirm(Request $request) {
+        try {
+            $user = Auth::user();
+            if ($user->reg_status !== "review") {
+                throw new \Exception('Complete membership details before confirming', 1);
+            }
+
+            $unverified_membership = UserMemberships::where('user_id', $user->id)->where('status', 'unverified')->first();
+            if (!$unverified_membership) {
+                throw new \Exception("You do not have an active and unverified membership.", 1);
+            }
+
+            $unverified_membership->update([ 'status' => 'pending' ]);
+            $user->update(['reg_status' => 'done']);
+
+            return ApiResponse::success('User membership confirmed successfully');
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
         }
