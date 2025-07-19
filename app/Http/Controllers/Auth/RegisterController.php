@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Register\RegisterAdminRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\User;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -41,10 +40,14 @@ class RegisterController extends Controller
             ]);
 
             if ($avatar) {
-                $result = Cloudinary::uploadApi()->upload($avatar->getRealPath(), [
+                $result = cloudinary()->uploadApi()->upload($avatar->getRealPath(), [
                     'folder' => 'users_avatars/',
                     'resource_type' => 'auto',
                 ]);
+
+                if (!isset($result['secure_url'])) {
+                    throw new \Exception('Invalid Cloudinary response: Missing secure_url');
+                }
                 $secureUrl = $result['secure_url'];
                 $user->update([ 'avatar_url' => $secureUrl ]);
             }
