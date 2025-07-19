@@ -20,7 +20,7 @@ class MembershipController extends Controller {
         try {
             $state = $request->query('state', '');
 
-            $baseQuery = UserMemberships::whereHas('user', fn ($query) => $query->role('member', 'api'))
+            $baseQuery = UserMemberships::whereHas('user', fn ($query) => $query->where('reg_status', 'done'))
                 ->whereHas('user.details', function ($query) use ($state) {
                     if ($state) {
                         $query->where('state', $state);
@@ -56,7 +56,7 @@ class MembershipController extends Controller {
             $state = $request->query('state');
             $status = $request->query('status');
 
-            $members = UserMemberships::whereHas('user', fn ($q) => $q->role('member', 'api'))
+            $members = UserMemberships::whereHas('user', fn ($q) => $q->where('reg_status', 'done'))
                 ->whereHas('user.details', function ($query) use ($state) {
                     if ($state) {
                         $query->where('state', $state);
@@ -87,7 +87,7 @@ class MembershipController extends Controller {
             $state = $userDetails->state;
             $status = $request->query('status');
 
-            $members = UserMemberships::whereHas('user', fn ($query) => $query->role('member', 'api'))
+            $members = UserMemberships::whereHas('user', fn ($query) => $query->where('reg_status', 'done'))
                 ->whereHas('user.details', function ($query) use ($state) {
                     if ($state) {
                         $query->where('state', $state);
