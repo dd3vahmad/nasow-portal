@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Yes, we received your application</title>
+  <title>Your Application Has Been Approved</title>
   <style>
     body {
       margin: 0;
@@ -37,11 +37,11 @@
 </head>
 <body>
   <div class="container">
-    <h1 class="greeting">Hello {{ $user->name }},</h1>
+    <h1 class="greeting">Congratulations {{ $user->name }},</h1>
 
     <div class="content">
-      <p>Your NASOW application is currently under review and awaiting approval. You will get notified once it has been approved.</p>
-      <p>If the application takes more than 7 days, please feel free to contact the support team on the NASOW portal.</p>
+      <p>Your NASOW application has been approved!</p>
+      <p>You can now log in to the NASOW portal and explore the available member features.</p>
     </div>
 
     <div class="footer">

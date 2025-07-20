@@ -8,7 +8,6 @@ use App\Http\Resources\MembersResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\UserMemberships;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class MembershipController extends Controller {
     /**
@@ -19,7 +18,7 @@ class MembershipController extends Controller {
      */
     public function stats(Request $request) {
         try {
-            $user = Auth::user();
+            $user = auth()->user();
             $userDetails = $user->details()->first();
 
             $state = $user->getRoleNames()[0] === RoleType::StateAdmin->value ? $userDetails->state : '';
@@ -86,7 +85,7 @@ class MembershipController extends Controller {
     public function state(Request $request)
     {
         try {
-            $user = Auth::user();
+            $user = auth()->user();
             $userDetails = $user->details()->first();
 
             $state = $userDetails->state;
@@ -151,6 +150,7 @@ class MembershipController extends Controller {
             ]);
             $user = $membership->user();
             $user->assignRole('member');
+            $user->sendMembershipApprovedNotification();
 
             return ApiResponse::success('Membership approved successfully', $membership);
         } catch (\Throwable $th) {
@@ -213,7 +213,8 @@ class MembershipController extends Controller {
      */
     public function confirm(Request $request) {
         try {
-            $user = Auth::user();
+            $user = auth()->user();
+
             if ($user->reg_status !== "review") {
                 throw new \Exception('Complete membership details before confirming', 1);
             }
