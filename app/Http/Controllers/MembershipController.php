@@ -6,6 +6,7 @@ use App\Enums\RoleType;
 use App\Http\Resources\MemberResource;
 use App\Http\Resources\MembersResource;
 use App\Http\Responses\ApiResponse;
+use App\Models\User;
 use App\Models\UserMemberships;
 use Illuminate\Http\Request;
 
@@ -167,6 +168,7 @@ class MembershipController extends Controller {
     public function suspend(int $id) {
         try {
             $membership = UserMemberships::find($id);
+            $user = User::first($membership->user_id);
 
             if (!$membership) {
                 throw new \Exception('Membership not found');
@@ -178,6 +180,7 @@ class MembershipController extends Controller {
                 'status' => 'suspended',
                 'suspended_at' => $suspendedAt,
             ]);
+            $user->sendMembershipSuspendedNotification();
 
             return ApiResponse::success('Membership suspended successfully', $membership);
         } catch (\Throwable $th) {

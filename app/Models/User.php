@@ -90,4 +90,9 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $this->notify(new \App\Notifications\MembershipApproved);
     }
+
+    public function sendMembershipSuspendedNotification()
+    {
+        $this->notify(new \App\Notifications\MembershipApproved);
+    }
 }
