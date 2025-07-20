@@ -173,6 +173,7 @@ class MembershipController extends Controller {
                 'status' => 'verified',
                 'verified_at' => $verifiedAt,
                 'expires_at' => $expiresAt,
+                'suspended_at' => null
             ]);
 
             $user = User::where('id', $membership->user_id)->first();
@@ -198,7 +199,12 @@ class MembershipController extends Controller {
     public function suspend(int $id) {
         try {
             $membership = UserMemberships::find($id);
-            $user = User::first($membership->user_id);
+
+            if (!$membership) {
+                throw new \Exception('Membership not found');
+            }
+
+            $user = User::where('id', $membership->user_id)->first();
 
             if (!$membership) {
                 throw new \Exception('Membership not found');
