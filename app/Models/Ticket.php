@@ -9,7 +9,19 @@ class Ticket extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'password', 'email', 'email_verified_at', 'status', 'closed_at'];
+    protected $fillable = [
+        'user_id',
+        'subject',
+        'email',
+        'name',
+        'state',
+        'assigned_to',
+        'assigned_at',
+        'assigned_by',
+        'status',
+        'closed_at',
+        'avg_response_time'
+    ];
 
     /* Mutators */
     public function close()
