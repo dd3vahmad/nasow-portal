@@ -225,6 +225,7 @@ class MembershipController extends Controller {
 
             $unverified_membership->update([ 'status' => 'pending' ]);
             $user->update(['reg_status' => 'done']);
+            $user->sendPendingMembershipNotification();
 
             return ApiResponse::success('User membership confirmed successfully');
         } catch (\Throwable $th) {

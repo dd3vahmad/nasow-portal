@@ -2,14 +2,12 @@
 
 namespace App\Notifications;
 
-use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use Illuminate\Support\Facades\URL;
 
-class VerifyEmail extends Notification
+class PendingMembership extends Notification
 {
     use Queueable;
 
@@ -32,32 +30,14 @@ class VerifyEmail extends Notification
     }
 
     /**
-     * Get the verification URL for the given notifiable.
-     */
-    protected function verificationUrl($notifiable)
-    {
-        $temporarySignedURL = URL::temporarySignedRoute(
-            'verification.verify',
-            Carbon::now()->addMinutes(60),
-            [
-                'id' => $notifiable->getKey(),
-                'hash' => sha1($notifiable->email),
-            ]
-        );
-
-        return $temporarySignedURL;
-    }
-
-    /**
      * Get the mail representation of the notification.
      */
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Please Confirm Your Email Address')
-            ->view('emails.verify-email', [
+            ->subject('We\'ve received your application!')
+            ->view('emails.pending-membership', [
                 'user' => $notifiable,
-                'url'  => $this->verificationUrl($notifiable),
             ]);
     }
 
