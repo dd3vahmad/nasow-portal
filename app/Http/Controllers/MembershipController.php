@@ -9,6 +9,7 @@ use App\Http\Responses\ApiResponse;
 use App\Models\User;
 use App\Models\UserMemberships;
 use Illuminate\Http\Request;
+use Spatie\Permission\Models\Role;
 
 class MembershipController extends Controller {
     /**
@@ -173,8 +174,13 @@ class MembershipController extends Controller {
                 'verified_at' => $verifiedAt,
                 'expires_at' => $expiresAt,
             ]);
-            $user = $membership->user();
-            $user->assignRole('member');
+
+            $user = User::where('id', $membership->user_id)->first();
+            $role = Role::firstOrCreate(
+                ['name' => 'member'],
+                ['guard_name' => 'api']
+            );
+            $user->assignRole($role);
             $user->sendMembershipApprovedNotification();
 
             return ApiResponse::success('Membership approved successfully', $membership);
