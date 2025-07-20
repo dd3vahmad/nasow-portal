@@ -60,14 +60,26 @@ class MembershipController extends Controller {
         try {
             $state = $request->query('state');
             $status = $request->query('status');
+            $search = $request->query('q');
 
-            $members = UserMemberships::whereHas('user', fn ($q) => $q->where('reg_status', 'done'))
+            $members = UserMemberships::whereHas('user', function ($q) use ($search) {
+                    $q->where('reg_status', 'done');
+
+                    if ($search) {
+                        $q->where(function ($query) use ($search) {
+                            $query->where('name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%");
+                        });
+                    }
+                })
                 ->whereHas('user.details', function ($query) use ($state) {
                     if ($state) {
                         $query->where('state', $state);
                     }
                 })
-                ->when($status, fn ($query) => $query->where('status', $status))
+                ->when($status, function ($query) use ($status) {
+                    $query->where('status', $status);
+                })
                 ->with(['user.details'])
                 ->get();
 
@@ -91,14 +103,26 @@ class MembershipController extends Controller {
 
             $state = $userDetails->state;
             $status = $request->query('status');
+            $search = $request->query('q');
 
-            $members = UserMemberships::whereHas('user', fn ($query) => $query->where('reg_status', 'done'))
+            $members = UserMemberships::whereHas('user', function ($query) use ($search) {
+                    $query->where('reg_status', 'done');
+
+                    if ($search) {
+                        $query->where(function ($q) use ($search) {
+                            $q->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                        });
+                    }
+                })
                 ->whereHas('user.details', function ($query) use ($state) {
                     if ($state) {
                         $query->where('state', $state);
                     }
                 })
-                ->when($status, fn ($query) => $query->where('status', $status))
+                ->when($status, function ($query) use ($status) {
+                    $query->where('status', $status);
+                })
                 ->with('user.details')
                 ->get();
 
