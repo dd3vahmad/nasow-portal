@@ -8,6 +8,7 @@ use App\Http\Resources\MembersResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\User;
 use App\Models\UserMemberships;
+use App\Services\MembershipNumberGenerator;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 
@@ -177,10 +178,13 @@ class MembershipController extends Controller {
             ]);
 
             $user = User::where('id', $membership->user_id)->first();
+            $generator = new MembershipNumberGenerator();
+            $membership_no = $generator->generate('NASOW');
             $role = Role::firstOrCreate(
                 ['name' => 'member'],
                 ['guard_name' => 'api']
             );
+            $user->details()->update([ 'no' => $membership_no ]);
             $user->assignRole($role);
             $user->sendMembershipApprovedNotification();
 

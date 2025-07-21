@@ -6,7 +6,6 @@ use App\Http\Requests\UserDetails\StoreUserDetailsRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\UserDetails;
 use App\Models\UserMemberships;
-use App\Services\MembershipNumberGenerator;
 use FFI\Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -63,11 +62,7 @@ class UserDetailsController extends Controller
             throw new Exception("You have an active membership. Kindly revoke it before continuing?", 1);
         }
 
-        $generator = new MembershipNumberGenerator();
-        $membership_no = $generator->generate('NASOW');
-
         return UserMemberships::createOrFirst([
-            'no' => $membership_no,
             'category' => $category,
             'user_id' => $user_id
         ])->first();
