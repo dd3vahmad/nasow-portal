@@ -11,12 +11,7 @@ class TicketMessage extends Model
 
     protected $fillable = ['sender_id', 'ticket_id', 'message'];
 
-    /* Relation */
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
+    /* Relationships */
     public function sender()
     {
         return $this->belongsTo(User::class, 'sender_id');

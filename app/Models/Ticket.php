@@ -20,10 +20,15 @@ class Ticket extends Model
         'assigned_by',
         'status',
         'closed_at',
-        'avg_response_time'
+        'avg_response_time',
     ];
 
-    /* Mutators */
+    protected $casts = [
+        'assigned_at' => 'datetime',
+        'closed_at' => 'datetime',
+    ];
+
+    /* Actions */
     public function close()
     {
         $this->update(['closed_at' => now()]);
@@ -34,7 +39,7 @@ class Ticket extends Model
         $this->update(['status' => $status]);
     }
 
-    /* Relation */
+    /* Relationships */
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -42,7 +47,7 @@ class Ticket extends Model
 
     public function support()
     {
-        return $this->belongsTo(User::class, 'assigned_to', 'id');
+        return $this->belongsTo(User::class, 'assigned_to');
     }
 
     public function messages()
