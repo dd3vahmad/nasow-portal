@@ -12,12 +12,14 @@ class AssignedTicket extends Notification
 {
     use Queueable;
 
+    protected $ticket;
+
     /**
      * Create a new notification instance.
      */
-    public function __construct()
+    public function __construct($ticket)
     {
-        //
+        $this->ticket = $ticket;
     }
 
     /**
@@ -37,10 +39,10 @@ class AssignedTicket extends Notification
     {
         // $ticket = Ticket::find($id);
         return (new MailMessage)
-            ->subject('Quickly come and resolve it!')
+            ->subject('New Ticket Assigned')
             ->view('emails.assigned-ticket', [
                 'user' => $notifiable,
-                // 'ticket' => $ticket,
+                'ticket' => $this->ticket,
             ]);
     }
 

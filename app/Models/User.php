@@ -96,8 +96,8 @@ class User extends Authenticatable implements MustVerifyEmail
         $this->notify(new \App\Notifications\MembershipApproved);
     }
 
-    public function sendAssignedTicketNotification()
+    public function sendAssignedTicketNotification(Ticket $ticket)
     {
-        $this->notify(new \App\Notifications\AssignedTicket);
+        $this->notify(new \App\Notifications\AssignedTicket($ticket));
     }
 }
