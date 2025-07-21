@@ -33,47 +33,51 @@ class RegisterController extends Controller
                 default => RoleType::SupportStaff->value,
             };
 
-            $user = User::create([
-                'name' => $validated['first_name'] . ' ' . $validated['last_name'],
-                'email' => $validated['email'],
-                'reg_status' => 'done',
-            ]);
-
-            if ($avatar) {
-                $result = cloudinary()->uploadApi()->upload($avatar->getRealPath(), [
-                    'folder' => 'users_avatars/',
-                    'resource_type' => 'auto',
+            $user = DB::transaction(function () use ($role, $avatar, $validated) {
+                $user = User::create([
+                    'name' => $validated['first_name'] . ' ' . $validated['last_name'],
+                    'email' => $validated['email'],
+                    'reg_status' => 'done',
                 ]);
 
-                if (!isset($result['secure_url'])) {
-                    throw new \Exception('Invalid Cloudinary response: Missing secure_url');
+                if ($avatar) {
+                    $result = cloudinary()->uploadApi()->upload($avatar->getRealPath(), [
+                        'folder' => 'users_avatars/',
+                        'resource_type' => 'auto',
+                    ]);
+
+                    if (!isset($result['secure_url'])) {
+                        throw new \Exception('Invalid Cloudinary response: Missing secure_url');
+                    }
+                    $secureUrl = $result['secure_url'];
+                    $user->update([ 'avatar_url' => $secureUrl ]);
                 }
-                $secureUrl = $result['secure_url'];
-                $user->update([ 'avatar_url' => $secureUrl ]);
-            }
 
-            $user->credentials()->create([
-                'email' => $user->email,
-                'password' => $validated['password'],
-                'email_verified_at' => now(),
-            ]);
+                $user->credentials()->create([
+                    'email' => $user->email,
+                    'password' => $validated['password'],
+                    'email_verified_at' => now(),
+                ]);
 
-            $role = Role::firstOrCreate(
-                ['name' => $role],
-                ['guard_name' => 'api']
-            );
-            $user->assignRole($role);
+                $role = Role::firstOrCreate(
+                    ['name' => $role],
+                    ['guard_name' => 'api']
+                );
+                $user->assignRole($role);
 
-            $user->details()->create([
-                'first_name' => $validated['first_name'],
-                'last_name' => $validated['last_name'],
-                'other_name' => $validated['other_name'],
-                'gender' => $validated['gender'],
-                'dob' => $validated['dob'],
-                'address' => $validated['address'],
-                'phone' => $validated['phone'],
-                'state' => $validated['state'],
-            ]);
+                $user->details()->create([
+                    'first_name' => $validated['first_name'],
+                    'last_name' => $validated['last_name'],
+                    'other_name' => isset($validated['other_name']) ?? "",
+                    'gender' => $validated['gender'],
+                    'dob' => $validated['dob'],
+                    'address' => $validated['address'],
+                    'phone' => $validated['phone'],
+                    'state' => $validated['state'],
+                ]);
+
+                return $user;
+            });
 
             return ApiResponse::success('Admin registered successfully', $user);
         } catch (\Throwable $th) {
