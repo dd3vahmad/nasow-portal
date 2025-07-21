@@ -175,7 +175,7 @@ class TicketController extends Controller
                 return ApiResponse::error('Ticket not found');
             }
 
-            return ApiResponse::success('Tickets fetched successfully', new TicketResource($ticket));
+            return ApiResponse::success('Tickets fetched successfully', new TicketResource($ticket->load('messages')));
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
         }
@@ -206,9 +206,8 @@ class TicketController extends Controller
                 'assigned_to' => $support_id,
                 'assigned_at' => now(),
                 'assigned_by' => $user->id,
-                'status' => 'open'
             ]);
-            // $support->sendAssignedTicketNotification();
+            $support->sendAssignedTicketNotification();
 
             return ApiResponse::success('Ticket assigned to support', $ticket);
         } catch (\Throwable $th) {
