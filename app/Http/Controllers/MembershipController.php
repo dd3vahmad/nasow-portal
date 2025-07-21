@@ -237,6 +237,7 @@ class MembershipController extends Controller {
                 throw new \Exception('Membership not found');
             }
             $membership->delete();
+            $membership->user()->delete();
 
             return ApiResponse::success('Membership deleted successfully', $membership);
         } catch (\Throwable $th) {
