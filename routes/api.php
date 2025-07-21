@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\SupportStaffController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserDetailsController;
@@ -52,6 +53,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         /** State Admin Only Routes */
         Route::middleware('role:state-admin')->group(function () {
             Route::get('tickets/state', [TicketController::class, 'state']);
+            Route::get('/supports/state', [SupportStaffController::class, 'state']);
         });
 
         /** National Admin Only Routes */
@@ -60,6 +62,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::put('/members/approve/{id}', [MembershipController::class, 'approve']);
             Route::put('/members/suspend/{id}', [MembershipController::class, 'suspend']);
             Route::get('/members', [MembershipController::class, 'index']);
+            Route::get('/supports', [SupportStaffController::class, 'index']);
             Route::get('/tickets', [TicketController::class, 'index']);
         });
 
