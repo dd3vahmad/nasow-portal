@@ -64,7 +64,7 @@ class UserDetailsController extends Controller
         }
 
         $generator = new MembershipNumberGenerator();
-        $membership_no = $generator->generate($category);
+        $membership_no = $generator->generate('NASOW');
 
         return UserMemberships::createOrFirst([
             'no' => $membership_no,
