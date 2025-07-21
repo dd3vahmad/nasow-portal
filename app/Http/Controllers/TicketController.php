@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Ticket\AssignTicketRequest;
 use App\Http\Requests\Ticket\CreateTicketRequest;
 use App\Http\Resources\TicketResource;
 use App\Http\Responses\ApiResponse;
@@ -184,10 +185,10 @@ class TicketController extends Controller
     /**
      * Assign ticket
      *
-     * @param Request $request
+     * @param AssignTicketRequest $request
      * @return ApiResponse
      */
-    public function assign(Request $request) {
+    public function assign(AssignTicketRequest $request) {
         try {
             $user = auth()->user();
             $data = $request->validated();
@@ -197,7 +198,8 @@ class TicketController extends Controller
             if (!$ticket) {
                 return ApiResponse::error('Ticket not found');
             }
-            $support = User::find($support_id);
+
+            $support = User::role('support-staff', 'api')->find($support_id);
             if (!$support) {
                 return ApiResponse::error('Support staff not found');
             }
@@ -206,10 +208,11 @@ class TicketController extends Controller
                 'assigned_to' => $support_id,
                 'assigned_at' => now(),
                 'assigned_by' => $user->id,
+                'status' => 'open'
             ]);
-            $support->sendAssignedTicketNotification();
+            $support->sendAssignedTicketNotification($ticket);
 
-            return ApiResponse::success('Ticket assigned to support', $ticket);
+            return ApiResponse::success('Ticket assigned to support', new TicketResource($ticket));
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
         }

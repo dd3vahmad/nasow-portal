@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Ticket;
 
 use App\Http\Requests\BaseRequest;
-use Illuminate\Validation\Rule;
 
 class CreateTicketRequest extends BaseRequest {
     /**
