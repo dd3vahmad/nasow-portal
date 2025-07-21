@@ -7,6 +7,7 @@ use App\Http\Resources\TicketResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Ticket;
 use App\Models\TicketMessage;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -162,7 +163,7 @@ class TicketController extends Controller
     }
 
     /**
-     * Gets ticket
+     * Get ticket
      *
      * @param int $id
      * @return ApiResponse
@@ -175,6 +176,41 @@ class TicketController extends Controller
             }
 
             return ApiResponse::success('Tickets fetched successfully', new TicketResource($ticket));
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
+
+    /**
+     * Assign ticket
+     *
+     * @param Request $request
+     * @return ApiResponse
+     */
+    public function assign(Request $request) {
+        try {
+            $user = auth()->user();
+            $data = $request->validated();
+            $ticket_id = $data['ticket_id'];
+            $support_id = $data['support_id'];
+            $ticket = Ticket::find($ticket_id);
+            if (!$ticket) {
+                return ApiResponse::error('Ticket not found');
+            }
+            $support = User::find($support_id);
+            if (!$support) {
+                return ApiResponse::error('Support staff not found');
+            }
+
+            $ticket->update([
+                'assigned_to' => $support_id,
+                'assigned_at' => now(),
+                'assigned_by' => $user->id,
+                'status' => 'open'
+            ]);
+            // $support->sendAssignedTicketNotification();
+
+            return ApiResponse::success('Ticket assigned to support', $ticket);
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
         }

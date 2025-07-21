@@ -69,6 +69,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/members/state', [MembershipController::class, 'state']);
             Route::get('/members/{id}', [MembershipController::class, 'view']);
             Route::delete('/members/{id}', [MembershipController::class, 'delete']);
+            Route::post('/tickets/assign', [TicketController::class, 'assign']);
         });
 
         /** Private users route */
