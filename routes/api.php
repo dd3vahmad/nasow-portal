@@ -41,6 +41,17 @@ Route::middleware(['auth:sanctum'])->group(function () {
         /** Member Only routes */
         Route::middleware('role:member')->group( function () {
             Route::post('/tickets', [TicketController::class, 'store']);
+            Route::get('/tickets/mine', [TicketController::class, 'mine']);
+        });
+
+        /** Support Staff Only Routes */
+        Route::middleware('role:support-staff')->group(function () {
+            Route::get('tickets/support', [TicketController::class, 'support']);
+        });
+
+        /** State Admin Only Routes */
+        Route::middleware('role:state-admin')->group(function () {
+            Route::get('tickets/state', [TicketController::class, 'state']);
         });
 
         /** National Admin Only Routes */
@@ -49,6 +60,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::put('/members/approve/{id}', [MembershipController::class, 'approve']);
             Route::put('/members/suspend/{id}', [MembershipController::class, 'suspend']);
             Route::get('/members', [MembershipController::class, 'index']);
+            Route::get('/tickets', [TicketController::class, 'index']);
         });
 
         /** National-Admin & State-Admin Only Routes */
@@ -57,6 +69,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/members/state', [MembershipController::class, 'state']);
             Route::get('/members/{id}', [MembershipController::class, 'view']);
             Route::delete('/members/{id}', [MembershipController::class, 'delete']);
+        });
+
+        /** Private users route */
+        Route::middleware('role:member|support-staff|state-admin|national-admin')->group( function () {
+            Route::get('/tickets/{id}', [TicketController::class, 'view']);
         });
     });
 });

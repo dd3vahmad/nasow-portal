@@ -7,6 +7,7 @@ use App\Http\Resources\TicketResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Ticket;
 use App\Models\TicketMessage;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class TicketController extends Controller
@@ -45,6 +46,135 @@ class TicketController extends Controller
             });
 
             return ApiResponse::success('Ticket created successfully', new TicketResource($ticket->load(['messages', 'support'])));
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
+
+    /**
+     * Gets logged in member tickets
+     *
+     * @param Request $request
+     * @return ApiResponse
+     */
+    public function mine(Request $request) {
+        try {
+            $status = $request->query('status', '');
+            $q = $request->query('q', '');
+            $user = auth()->user();
+
+            $tickets = Ticket::where('user_id', $user->id)
+                ->when($status, function ($query) use ($status) {
+                    $query->where('status', $status);
+                })
+                ->when($q, function ($query) use ($q) {
+                    $query->where('subject', 'like', "%{$q}%");
+                })
+                ->get();
+
+            return ApiResponse::success('Member tickets fetched successfully', TicketResource::collection($tickets));
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
+
+    /**
+     * Gets assigned tickets
+     *
+     * @param Request $request
+     * @return ApiResponse
+     */
+    public function support(Request $request) {
+        try {
+            $status = $request->query('status', '');
+            $q = $request->query('q', '');
+            $user = auth()->user();
+
+            $tickets = Ticket::where('assigned_to', $user->id)
+                ->when($status, function ($query) use ($status) {
+                    $query->where('status', $status);
+                })
+                ->when($q, function ($query) use ($q) {
+                    $query->where('subject', 'like', "%{$q}%");
+                })
+                ->get();
+
+            return ApiResponse::success('Assigned tickets fetched successfully', TicketResource::collection($tickets));
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
+
+    /**
+     * Gets state tickets
+     *
+     * @param Request $request
+     * @return ApiResponse
+     */
+    public function state(Request $request) {
+        try {
+            $status = $request->query('status', '');
+            $q = $request->query('q', '');
+            $user = auth()->user();
+
+            $tickets = Ticket::where('state', $user->details()->getAttribute('state'))
+                ->when($status, function ($query) use ($status) {
+                    $query->where('status', $status);
+                })
+                ->when($q, function ($query) use ($q) {
+                    $query->where('subject', 'like', "%{$q}%");
+                })
+                ->get();
+
+            return ApiResponse::success('State tickets fetched successfully', TicketResource::collection($tickets));
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
+
+    /**
+     * Gets tickets
+     *
+     * @param Request $request
+     * @return ApiResponse
+     */
+    public function index(Request $request) {
+        try {
+            $status = $request->query('status', '');
+            $state = $request->query('state', '');
+            $q = $request->query('q', '');
+
+            $tickets = Ticket::when($status, function ($query) use ($status) {
+                    $query->where('status', $status);
+                })
+                ->when($state, function ($query) use ($state) {
+                    $query->where('state', $state);
+                })
+                ->when($q, function ($query) use ($q) {
+                    $query->where('subject', 'like', "%{$q}%");
+                })
+                ->get();
+
+            return ApiResponse::success('Tickets fetched successfully', TicketResource::collection($tickets));
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
+
+    /**
+     * Gets ticket
+     *
+     * @param int $id
+     * @return ApiResponse
+     */
+    public function view(int $id) {
+        try {
+            $ticket = Ticket::find($id);
+            if (!$ticket) {
+                return ApiResponse::error('Ticket not found');
+            }
+
+            return ApiResponse::success('Tickets fetched successfully', new TicketResource($ticket));
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
         }
