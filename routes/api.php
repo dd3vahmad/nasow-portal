@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\TicketController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserDetailsController;
 use App\Http\Controllers\UserDocumentsController;
@@ -35,6 +36,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/specialization', [UserDetailsController::class, 'add_specialization']);
             Route::post('/documents', [UserDocumentsController::class, 'store']);
             Route::post('/members/confirm', [MembershipController::class, 'confirm']);
+        });
+
+        /** Member Only routes */
+        Route::middleware('role:member')->group( function () {
+            Route::post('/tickets', [TicketController::class, 'store']);
         });
 
         /** National Admin Only Routes */
