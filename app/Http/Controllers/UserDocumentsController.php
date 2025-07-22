@@ -6,7 +6,6 @@ use App\Http\Responses\ApiResponse;
 use Illuminate\Support\Facades\Auth;
 use App\Models\UserDocument;
 use App\Http\Requests\UserDocuments\StoreUserDocumentsRequest;
-use Cloudinary\Api\Exception\ApiError;
 use Illuminate\Support\Facades\Log;
 
 class UserDocumentsController extends Controller
@@ -43,25 +42,17 @@ class UserDocumentsController extends Controller
                     throw new \Exception('Invalid or missing file at index ' . $index . ': ' . ($file ? $file->getClientOriginalName() : 'No file'));
                 }
 
-                // Upload to Cloudinary
-                try {
-                    $result = cloudinary()->uploadApi()->upload($file->getRealPath(), [
-                        'folder' => 'user_documents/' . $user->id,
-                        'resource_type' => 'auto',
-                    ]);
-                } catch (ApiError $e) {
-                    var_dump('Omooo 2');
-                    throw new \Exception('Cloudinary upload failed: ' . $e->getMessage());
-                }
+                $result = cloudinary()->uploadApi()->upload($file->getRealPath(), [
+                    'folder' => 'user_documents/' . $user->id,
+                    'resource_type' => 'auto',
+                ]);
 
-                // Check if result contains secure_url
                 if (!isset($result['secure_url'])) {
                     throw new \Exception('Invalid Cloudinary response: Missing secure_url');
                 }
 
                 $secureUrl = $result['secure_url'];
 
-                // Save to database
                 $saved = UserDocument::create([
                     'user_id' => $user->id,
                     'name' => $document['name'],
