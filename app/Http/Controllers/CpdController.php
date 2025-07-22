@@ -25,7 +25,7 @@ class CPDController extends Controller
                 'description' => $data['description'],
                 'type' => $data['type'],
                 'credit_hours' => $data['credit_hours'],
-                'hosting_body' => $data['hosting_body'] ?? null,
+                'hosting_body' => $data['hosting_body'] ?? 'NASOW',
             ];
 
             if (isset($certificate)) {
