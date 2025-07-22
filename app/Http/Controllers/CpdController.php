@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CPD\StoreCpdActivityRequest;
+use App\Http\Resources\CpdLogResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\CpdActivity;
 use App\Models\CpdLog;
@@ -103,7 +104,7 @@ class CPDController extends Controller
             $q = $request->query('q', '');
             $type = $request->query('type', '');
 
-            $activities = CpdLog::when($status, function ($query) use ($status) {
+            $logs = CpdLog::when($status, function ($query) use ($status) {
                     $query->where('status', $status);
                 })
                 ->when($state, function ($query) use ($state) {
@@ -123,7 +124,7 @@ class CPDController extends Controller
                 })
                 ->get();
 
-            return ApiResponse::success('Activities fetched successfully', $activities);
+            return ApiResponse::success('Logs fetched successfully', CpdLogResource::collection($logs));
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
         }
@@ -143,7 +144,7 @@ class CPDController extends Controller
             $q = $request->query('q', '');
             $type = $request->query('type', '');
 
-            $activities = CpdLog::when($status, function ($query) use ($status) {
+            $logs = CpdLog::when($status, function ($query) use ($status) {
                     $query->where('status', $status);
                 })
                 ->when($state, function ($query) use ($state) {
@@ -163,7 +164,7 @@ class CPDController extends Controller
                 })
                 ->get();
 
-            return ApiResponse::success('Activities fetched successfully', $activities);
+            return ApiResponse::success('Logs fetched successfully', CpdLogResource::collection($logs));
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
         }
