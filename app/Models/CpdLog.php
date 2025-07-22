@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class CPDLog extends Model
+class CpdLog extends Model
 {
     protected $fillable = [
         'title',
@@ -17,11 +17,12 @@ class CPDLog extends Model
         'status'
     ];
 
-    /**
-     * Log activity
-     * @return void
-     */
+    /** Relation */
     public function activity() {
-        $this->belongsTo(CpdActivity::class);
+        return $this->belongsTo(CpdActivity::class);
+    }
+
+    public function member() {
+        return $this->belongsTo(User::class);
     }
 }

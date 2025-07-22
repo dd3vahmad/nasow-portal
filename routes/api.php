@@ -53,12 +53,14 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         /** State Admin Only Routes */
         Route::middleware('role:state-admin')->group(function () {
+            Route::get('/cpd/logs/state', [CpdController::class, 'state']);
             Route::get('tickets/state', [TicketController::class, 'state']);
             Route::get('/supports/state', [SupportStaffController::class, 'state']);
         });
 
         /** National Admin Only Routes */
         Route::middleware('role:national-admin')->group( function () {
+            Route::get('/cpd/logs', [CpdController::class, 'index']);
             Route::post('/register/admin', [RegisterController::class, 'registerAdmin']);
             Route::put('/members/approve/{id}', [MembershipController::class, 'approve']);
             Route::put('/members/suspend/{id}', [MembershipController::class, 'suspend']);
