@@ -41,15 +41,13 @@ class CPDController extends Controller
 
                 $details['certificate_url'] = $secure_url;
             }
-            $activity = CpdActivity::create($details);
+            $activity = CpdActivity::create($details)->get();
 
             return ApiResponse::success('Activity created successfully', $activity);
         } catch (\Throwable $th) {
-            var_dump('omoooo');
             return ApiResponse::error($th->getMessage());
         }
     }
-
 
     /**
      * Get all CPD activities
