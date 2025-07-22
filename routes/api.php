@@ -43,6 +43,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         /** Member Only routes */
         Route::middleware('role:member')->group( function () {
             Route::post('/cpd/logs', [CpdController::class, 'log']);
+            Route::get('/cpd/logs/stats', [CpdController::class, 'stats']);
             Route::post('/tickets', [TicketController::class, 'store']);
             Route::get('/tickets/mine', [TicketController::class, 'mine']);
         });
@@ -78,7 +79,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/members/{id}', [MembershipController::class, 'view']);
             Route::delete('/members/{id}', [MembershipController::class, 'delete']);
             Route::post('/tickets/assign', [TicketController::class, 'assign']);
-            Route::post('/cpd/logs/approve', [CpdController::class, 'approve']);
+            Route::post('/cpd/logs/approve/{id}', [CpdController::class, 'approve']);
             Route::post('/cpd/logs/reject', [CpdController::class, 'reject']);
         });
 

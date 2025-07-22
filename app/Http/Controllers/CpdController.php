@@ -182,9 +182,12 @@ class CPDController extends Controller
     public function approve(int $id) {
         try {
             $log = CpdLog::find($id);
+            if (!$log) {
+                return ApiResponse::error('Cpd log not found');
+            }
             $log->update([ 'status' => 'approved' ]);
 
-            return ApiResponse::success('Log approved successfully');
+            return ApiResponse::success('Log approved successfully', $log);
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
         }
@@ -199,9 +202,43 @@ class CPDController extends Controller
     public function reject(int $id) {
         try {
             $log = CpdLog::find($id);
+            if (!$log) {
+                return ApiResponse::error('Cpd log not found');
+            }
             $log->update([ 'status' => 'reject' ]);
 
             return ApiResponse::success('Log approved successfully', $log);
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
+
+    /**
+     * Get CPD stats for member
+     *
+     * @param Request $request
+     * @return ApiResponse
+     */
+    public function stats(Request $request)
+    {
+        try {
+            $user = auth()->user();
+            $total = CpdLog::where('member_id', $user->id)
+                ->sum('credit_hours');
+
+            $types = CpdLog::with('activity')
+                ->get()
+                ->groupBy(fn($log) => $log->activity->type ?? 'unknown')
+                ->map(function ($group) {
+                    return $group->sum('credit_hours');
+                });
+
+            $stats = [
+                'total' => $total,
+                'types' => $types,
+            ];
+
+            return ApiResponse::success('Stats fetched successfully', $stats);
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
         }
