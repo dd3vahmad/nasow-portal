@@ -172,4 +172,38 @@ class CPDController extends Controller
             return ApiResponse::error($th->getMessage());
         }
     }
+
+    /**
+     * Approve cpd log
+     *
+     * @param int $id
+     * @return ApiResponse
+     */
+    public function approve(int $id) {
+        try {
+            $log = CpdLog::find($id);
+            $log->update([ 'status' => 'approved' ]);
+
+            return ApiResponse::success('Log approved successfully');
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
+
+    /**
+     * Reject cpd log
+     *
+     * @param int $id
+     * @return ApiResponse
+     */
+    public function reject(int $id) {
+        try {
+            $log = CpdLog::find($id);
+            $log->update([ 'status' => 'reject' ]);
+
+            return ApiResponse::success('Log approved successfully', $log);
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
 }

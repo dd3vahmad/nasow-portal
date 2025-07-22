@@ -78,6 +78,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/members/{id}', [MembershipController::class, 'view']);
             Route::delete('/members/{id}', [MembershipController::class, 'delete']);
             Route::post('/tickets/assign', [TicketController::class, 'assign']);
+            Route::post('/cpd/logs/approve', [CpdController::class, 'approve']);
+            Route::post('/cpd/logs/reject', [CpdController::class, 'reject']);
         });
 
         /** Private users route */
