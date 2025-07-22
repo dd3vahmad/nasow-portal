@@ -42,6 +42,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         /** Member Only routes */
         Route::middleware('role:member')->group( function () {
+            Route::post('/cpd/logs', [CpdController::class, 'log']);
             Route::post('/tickets', [TicketController::class, 'store']);
             Route::get('/tickets/mine', [TicketController::class, 'mine']);
         });

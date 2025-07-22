@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CPD\StoreCpdActivityRequest;
+use App\Http\Requests\CPD\LogCpdActivityRequest;
 use App\Http\Resources\CpdLogResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\CpdActivity;
@@ -57,39 +58,41 @@ class CPDController extends Controller
      * @param LogCpdActivityRequest $request
      * @return ApiResponse
      */
-    // public function log(LogCpdActivityRequest $request) {
-    //     try {
-    //         $data = $request->validated();
-    //         $certificate = $data['certificate'] ?? null;
+    public function log(LogCpdActivityRequest $request) {
+        try {
+            $user = auth()->user();
+            $data = $request->validated();
+            $certificate = $data['certificate'] ?? null;
 
-    //         $details = [
-    //             'title' => $data['title'],
-    //             'description' => $data['description'],
-    //             'type' => $data['type'],
-    //             'credit_hours' => $data['credit_hours'],
-    //             'hosting_body' => $data['hosting_body'] ?? 'NASOW',
-    //         ];
+            $details = [
+                'title' => $data['title'],
+                'description' => $data['description'],
+                'activity_id' => $data['activity_id'],
+                'credit_hours' => $data['credit_hours'],
+                'completed_at' => $data['completed_at'],
+                'member_id' => $user->id,
+            ];
 
-    //         if (isset($certificate)) {
-    //             $result = cloudinary()->uploadApi()->upload($certificate->getRealPath(), [
-    //                 'folder' => 'activity_certificate',
-    //                 'resource_type' => 'auto',
-    //             ]);
-    //             $secure_url = $result['secure_url'] ?? null;
+            if (isset($certificate)) {
+                $result = cloudinary()->uploadApi()->upload($certificate->getRealPath(), [
+                    'folder' => 'activity_certificate',
+                    'resource_type' => 'auto',
+                ]);
+                $secure_url = $result['secure_url'] ?? null;
 
-    //             if (!isset($secure_url)) {
-    //                 throw new \Exception('Invalid Cloudinary response: Missing secure_url');
-    //             }
+                if (!isset($secure_url)) {
+                    throw new \Exception('Invalid Cloudinary response: Missing secure_url');
+                }
 
-    //             $details['certificate_url'] = $secure_url;
-    //         }
-    //         $activity = CpdActivity::create($details)->get();
+                $details['certificate_url'] = $secure_url;
+            }
+            $log = CpdLog::create($details)->get();
 
-    //         return ApiResponse::success('Activity created successfully', $activity);
-    //     } catch (\Throwable $th) {
-    //         return ApiResponse::error($th->getMessage());
-    //     }
-    // }
+            return ApiResponse::success('Log created successfully', $log);
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
 
     /**
      * Get all CPD logs
