@@ -20,7 +20,7 @@ return new class extends Migration
             $table->date('completed_at');
             $table->decimal('credit_hours', 4, 1);
             $table->string('certificate_url')->nullable();
-            $table->enum('status', ['pending', 'approved', 'rejected']);
+            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->timestamps();
         });
     }
