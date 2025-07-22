@@ -16,7 +16,7 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->string('description');
-            $table->enum('type', array_map(fn($case) => $case->value, CPDActivityType::cases()));
+            $table->enum('type', array_map(fn($case) => $case->value, CpdActivityType::cases()));
             $table->decimal('credit_hours', 4, 1);
             $table->string('hosting_body')->default('NASOW');
             $table->string('certificate_url')->nullable();

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class CPDLog extends Model
 {
-    protected $fillables = [
+    protected $fillable = [
         'title',
         'description',
         'member_id',
@@ -22,6 +22,6 @@ class CPDLog extends Model
      * @return void
      */
     public function activity() {
-        $this->belongsTo(CPDActivity::class);
+        $this->belongsTo(CpdActivity::class);
     }
 }

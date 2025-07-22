@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CpdController;
 use App\Http\Controllers\SupportStaffController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\UserController;
@@ -68,6 +69,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         /** National-Admin & State-Admin Only Routes */
         Route::middleware('role:state-admin|national-admin')->group(function() {
+            Route::post('/cpd/activities', [CpdController::class, 'store']);
             Route::get('/members/stats', [MembershipController::class, 'stats']);
             Route::get('/members/state', [MembershipController::class, 'state']);
             Route::get('/members/{id}', [MembershipController::class, 'view']);

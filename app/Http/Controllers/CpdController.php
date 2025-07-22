@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\CPD\StoreCPDActivityRequest;
+use App\Http\Requests\CPD\StoreCpdActivityRequest;
 use App\Http\Responses\ApiResponse;
-use App\Models\CPDActivity;
+use App\Models\CpdActivity;
 use Illuminate\Http\Request;
 
 class CPDController extends Controller
@@ -12,20 +12,20 @@ class CPDController extends Controller
     /**
      * Add CPD activity
      *
-     * @param StoreCPDActivityRequest $request
+     * @param StoreCpdActivityRequest $request
      * @return ApiResponse
      */
-    public function store(StoreCPDActivityRequest $request) {
+    public function store(StoreCpdActivityRequest $request) {
         try {
             $data = $request->validated();
-            $certificate = $data['certificate'];
+            $certificate = $data['certificate'] ?? null;
 
             $details = [
                 'title' => $data['title'],
                 'description' => $data['description'],
                 'type' => $data['type'],
                 'credit_hours' => $data['credit_hours'],
-                'hosting_body' => $data['hosting_body'],
+                'hosting_body' => $data['hosting_body'] ?? null,
             ];
 
             if (isset($certificate)) {
@@ -33,7 +33,7 @@ class CPDController extends Controller
                     'folder' => 'activity_certificate',
                     'resource_type' => 'auto',
                 ]);
-                $secure_url = $result['secure_url'];
+                $secure_url = $result['secure_url'] ?? null;
 
                 if (!isset($secure_url)) {
                     throw new \Exception('Invalid Cloudinary response: Missing secure_url');
@@ -41,10 +41,11 @@ class CPDController extends Controller
 
                 $details['certificate_url'] = $secure_url;
             }
-            $activity = CPDActivity::create($details);
+            $activity = CpdActivity::create($details);
 
             return ApiResponse::success('Activity created successfully', $activity);
         } catch (\Throwable $th) {
+            var_dump('omoooo');
             return ApiResponse::error($th->getMessage());
         }
     }
@@ -58,7 +59,7 @@ class CPDController extends Controller
      */
     public function activities(Request $request) {
         try {
-            $activities = CPDActivity::get();
+            $activities = CpdActivity::get();
 
             return ApiResponse::success('Activities fetched successfully', $activities);
         } catch (\Throwable $th) {

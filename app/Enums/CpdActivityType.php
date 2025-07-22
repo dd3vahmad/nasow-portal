@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum CPDActivityType: string
+enum CpdActivityType: string
 {
     case SEMINAR = 'seminar';
     case COURSE = 'course';
