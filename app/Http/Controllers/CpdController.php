@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CPD\StoreCpdActivityRequest;
 use App\Http\Requests\CPD\LogCpdActivityRequest;
+use App\Http\Resources\CpdActivityResource;
 use App\Http\Resources\CpdLogResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\CpdActivity;
@@ -161,7 +162,7 @@ class CPDController extends Controller
                 })
                 ->get();
 
-            return ApiResponse::success('Activities fetched successfully', CpdLogResource::collection($logs));
+            return ApiResponse::success('Activities fetched successfully', CpdActivityResource::collection($logs));
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
         }
