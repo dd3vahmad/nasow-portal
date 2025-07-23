@@ -214,7 +214,7 @@ class CPDController extends Controller
             if (!$log) {
                 return ApiResponse::error('Cpd log not found');
             }
-            $log->update([ 'status' => 'reject' ]);
+            $log->update([ 'status' => 'rejected' ]);
 
             return ApiResponse::success('Log approved successfully', $log);
         } catch (\Throwable $th) {
@@ -235,7 +235,7 @@ class CPDController extends Controller
             $total = CpdLog::where('member_id', $user->id)
                 ->sum('credit_hours');
 
-            $types = CpdLog::with('activity')
+            $types = CpdLog::where('status', 'approved')->with('activity')
                 ->get()
                 ->groupBy(fn($log) => $log->activity->type ?? 'unknown')
                 ->map(function ($group) {
