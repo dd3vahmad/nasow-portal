@@ -135,7 +135,7 @@ class CPDController extends Controller
                     });
                 })
                 ->when($q, function ($query) use ($q) {
-                    $query->where('title', 'like', $q)->orWhere('description', 'like', $q);
+                    $query->where('title', 'like', "%$q%")->orWhere('description', 'like', "%$q%");
                 })
                 ->get();
 
@@ -200,7 +200,7 @@ class CPDController extends Controller
                     $query->where('type', $type);
                 })
                 ->when($q, function ($query) use ($q) {
-                    $query->where('title', 'like', $q)->orWhere('description', 'like', $q);
+                    $query->where('title', 'like', "%$q%")->orWhere('description', 'like', "%$q%");
                 })
                 ->get();
 
@@ -225,7 +225,7 @@ class CPDController extends Controller
                     $query->where('type', $type);
                 })
                 ->when($q, function ($query) use ($q) {
-                    $query->where('title', 'like', $q)->orWhere('description', 'like', $q);
+                    $query->where('title', 'like', "%$q%")->orWhere('description', 'like', "%$q%");
                 })
                 ->get();
 
