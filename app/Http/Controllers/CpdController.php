@@ -69,6 +69,7 @@ class CPDController extends Controller
             $details = [
                 'title' => $data['title'],
                 'description' => $data['description'],
+                'completed_at' => $data['completed_at'],
                 'member_id' => $user->id,
             ];
 
