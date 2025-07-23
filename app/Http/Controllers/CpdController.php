@@ -9,6 +9,7 @@ use App\Http\Resources\CpdLogResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\CpdActivity;
 use App\Models\CpdLog;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class CPDController extends Controller
@@ -145,31 +146,6 @@ class CPDController extends Controller
     }
 
     /**
-     * Get all CPD activities
-     *
-     * @param Request $request
-     * @return ApiResponse
-     */
-    public function activities(Request $request) {
-        try {
-            $q = $request->query('q', '');
-            $type = $request->query('type', '');
-
-            $logs = CpdActivity::when($type, function ($query) use ($type) {
-                    $query->where('type', $type);
-                })
-                ->when($q, function ($query) use ($q) {
-                    $query->where('title', 'like', $q)->orWhere('description', 'like', $q);
-                })
-                ->get();
-
-            return ApiResponse::success('Activities fetched successfully', CpdActivityResource::collection($logs));
-        } catch (\Throwable $th) {
-            return ApiResponse::error($th->getMessage());
-        }
-    }
-
-    /**
      * Get state CPD logs
      *
      * @param Request $request
@@ -204,6 +180,56 @@ class CPDController extends Controller
                 ->get();
 
             return ApiResponse::success('Logs fetched successfully', CpdLogResource::collection($logs));
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
+
+    /**
+     * Get the year's CPD activities
+     *
+     * @param Request $request
+     * @return ApiResponse
+     */
+    public function current(Request $request) {
+        try {
+            $q = $request->query('q', '');
+            $type = $request->query('type', '');
+
+            $logs = CpdActivity::whereYear('created_at', Carbon::now()->year)->when($type, function ($query) use ($type) {
+                    $query->where('type', $type);
+                })
+                ->when($q, function ($query) use ($q) {
+                    $query->where('title', 'like', $q)->orWhere('description', 'like', $q);
+                })
+                ->get();
+
+            return ApiResponse::success('Activities fetched successfully', CpdActivityResource::collection($logs));
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
+
+    /**
+     * Get all CPD activities
+     *
+     * @param Request $request
+     * @return ApiResponse
+     */
+    public function activities(Request $request) {
+        try {
+            $q = $request->query('q', '');
+            $type = $request->query('type', '');
+
+            $logs = CpdActivity::when($type, function ($query) use ($type) {
+                    $query->where('type', $type);
+                })
+                ->when($q, function ($query) use ($q) {
+                    $query->where('title', 'like', $q)->orWhere('description', 'like', $q);
+                })
+                ->get();
+
+            return ApiResponse::success('Activities fetched successfully', CpdActivityResource::collection($logs));
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
         }
@@ -262,7 +288,8 @@ class CPDController extends Controller
             $total = CpdLog::where('member_id', $user->id)
                 ->sum('credit_hours');
 
-            $types = CpdLog::where('status', 'approved')->with('activity')
+            $types = CpdLog::whereYear('created_at', Carbon::now()->year)
+                ->where('status', 'approved')->with('activity')
                 ->get()
                 ->groupBy(fn($log) => $log->activity->type ?? 'unknown')
                 ->map(function ($group) {

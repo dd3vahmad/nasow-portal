@@ -81,12 +81,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/tickets/assign', [TicketController::class, 'assign']);
             Route::post('/cpd/logs/approve/{id}', [CpdController::class, 'approve']);
             Route::post('/cpd/logs/reject', [CpdController::class, 'reject']);
+            Route::post('/cpd/activities/all', [CpdController::class, 'activities']);
         });
 
         /** Private users route */
         Route::middleware('role:member|support-staff|state-admin|national-admin')->group( function () {
             Route::get('/tickets/{id}', [TicketController::class, 'view']);
-            Route::get('/cpd/activities', [CpdController::class, 'activities']);
+            Route::get('/cpd/activities', [CpdController::class, 'current']);
         });
     });
 });
