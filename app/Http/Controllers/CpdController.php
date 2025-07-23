@@ -288,7 +288,8 @@ class CPDController extends Controller
             $total = CpdLog::where('member_id', $user->id)
                 ->sum('credit_hours');
 
-            $types = CpdLog::whereYear('created_at', Carbon::now()->year)
+            $types = CpdLog::where('member_id', $user->id)
+                ->whereYear('created_at', Carbon::now()->year)
                 ->where('status', 'approved')->with('activity')
                 ->get()
                 ->groupBy(fn($log) => $log->activity->type ?? 'unknown')
@@ -302,6 +303,39 @@ class CPDController extends Controller
             ];
 
             return ApiResponse::success('Stats fetched successfully', $stats);
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
+
+    /**
+     * Get all member CPD logs
+     *
+     * @param Request $request
+     * @return ApiResponse
+     */
+    public function member(Request $request) {
+        try {
+            $user = auth()->user();
+            $status = $request->query('status', '');
+            $q = $request->query('q', '');
+            $type = $request->query('type', '');
+
+            $logs = CpdLog::where('member_id', $user->id)
+                ->when($status, function ($query) use ($status) {
+                    $query->where('status', $status);
+                })
+                ->when($type, function ($query) use ($type) {
+                    $query->whereHas('activity', function ($query) use ($type) {
+                        $query->where('type', $type);
+                    });
+                })
+                ->when($q, function ($query) use ($q) {
+                    $query->where('title', 'like', "%$q%")->orWhere('description', 'like', "%$q%");
+                })
+                ->get();
+
+            return ApiResponse::success('Logs fetched successfully', CpdLogResource::collection($logs));
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
         }
