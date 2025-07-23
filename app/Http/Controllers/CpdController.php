@@ -63,15 +63,24 @@ class CPDController extends Controller
             $user = auth()->user();
             $data = $request->validated();
             $certificate = $data['certificate'] ?? null;
+            $activity_id = $data['activity_id'] ?? null;
 
             $details = [
                 'title' => $data['title'],
                 'description' => $data['description'],
-                'activity_id' => $data['activity_id'],
-                'credit_hours' => $data['credit_hours'],
-                'completed_at' => $data['completed_at'],
                 'member_id' => $user->id,
             ];
+
+            if (isset($activity_id)) {
+                $activity = CpdActivity::find($activity_id);
+                if (!$activity) {
+                    return ApiResponse::error('Cpd activity with this id not found', 404);
+                }
+                $details['activity_id'] = $activity_id;
+                $details['credit_hours'] = $activity->credit_hours;
+            } else {
+                $details['credit_hours'] = $data['credit_hours'];
+            }
 
             if (isset($certificate)) {
                 $result = cloudinary()->uploadApi()->upload($certificate->getRealPath(), [

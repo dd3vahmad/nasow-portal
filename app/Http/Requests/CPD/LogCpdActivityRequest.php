@@ -24,9 +24,21 @@ class LogCpdActivityRequest extends BaseRequest
         return [
             'title' => 'required|string|max:50',
             'description' => 'required|string|max:255',
-            'credit_hours' => ['required', 'numeric', 'between:1,999.9', 'regex:/^\d{1,3}(\.\d)?$/'],
+            'credit_hours' => [
+                'nullable',
+                'numeric',
+                'between:1,999.9',
+                'regex:/^\d{1,3}(\.\d)?$/',
+                'required_without:activity_id',
+                'prohibited_with:activity_id',
+            ],
             'completed_at' => 'required|date|before_or_equal:today',
-            'activity_id' => 'required|exists:cpd_activities,id',
+            'activity_id' => [
+                'nullable',
+                'exists:cpd_activities,id',
+                'required_without:credit_hours',
+                'prohibited_with:credit_hours',
+            ],
             'certificate' => 'nullable|file|max:2048',
         ];
     }
