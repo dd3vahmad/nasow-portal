@@ -286,6 +286,7 @@ class CPDController extends Controller
         try {
             $user = auth()->user();
             $total = CpdLog::where('member_id', $user->id)
+                ->where('status', 'approved')
                 ->sum('credit_hours');
 
             $types = CpdLog::where('member_id', $user->id)
