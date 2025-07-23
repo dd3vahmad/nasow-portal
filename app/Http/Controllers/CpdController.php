@@ -143,6 +143,29 @@ class CPDController extends Controller
     }
 
     /**
+     * Get all CPD activities
+     *
+     * @param Request $request
+     * @return ApiResponse
+     */
+    public function activities(Request $request) {
+        try {
+            $q = $request->query('q', '');
+            $type = $request->query('type', '');
+
+            $logs = CpdActivity::where('type', $type)
+                ->when($q, function ($query) use ($q) {
+                    $query->where('title', 'like', $q)->orWhere('description', 'like', $q);
+                })
+                ->get();
+
+            return ApiResponse::success('Activities fetched successfully', CpdLogResource::collection($logs));
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
+
+    /**
      * Get state CPD logs
      *
      * @param Request $request

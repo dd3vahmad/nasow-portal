@@ -86,6 +86,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         /** Private users route */
         Route::middleware('role:member|support-staff|state-admin|national-admin')->group( function () {
             Route::get('/tickets/{id}', [TicketController::class, 'view']);
+            Route::get('/cpd/activities', [CpdController::class, 'activities']);
         });
     });
 });
