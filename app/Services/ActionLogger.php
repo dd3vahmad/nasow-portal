@@ -6,7 +6,13 @@ use App\Models\Activity;
 use App\Models\AuditLog;
 
 class ActionLogger {
-    public static function log(string $type, string $description, ?int $userId = null, ?int $stateId = null, array $meta = []): void {
+    public static function log(
+        string $type,
+        string $description,
+        ?int $userId = null,
+        ?int $stateId = null,
+        array $meta = []
+    ): void {
         Activity::create([
             'type' => $type,
             'description' => $description,
