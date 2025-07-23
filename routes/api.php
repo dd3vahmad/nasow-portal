@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CpdController;
+use App\Http\Controllers\StatisticsController;
 use App\Http\Controllers\SupportStaffController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\UserController;
@@ -70,12 +71,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/members', [MembershipController::class, 'index']);
             Route::get('/supports', [SupportStaffController::class, 'index']);
             Route::get('/tickets', [TicketController::class, 'index']);
+            Route::get('/stats/national', [StatisticsController::class, 'national']);
         });
 
         /** National-Admin & State-Admin Only Routes */
         Route::middleware('role:state-admin|national-admin')->group(function() {
             Route::post('/cpd/activities', [CpdController::class, 'store']);
-            Route::get('/members/stats', [MembershipController::class, 'stats']);
+            Route::get('/members/stats', [StatisticsController::class, 'members_count']);
             Route::get('/members/state', [MembershipController::class, 'state']);
             Route::get('/members/{id}', [MembershipController::class, 'view']);
             Route::delete('/members/{id}', [MembershipController::class, 'delete']);

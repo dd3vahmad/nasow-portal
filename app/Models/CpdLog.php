@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class CpdLog extends Model
 {
+    protected $casts = [
+        'credit_hours' => 'float',
+    ];
+
     protected $fillable = [
         'title',
         'description',
