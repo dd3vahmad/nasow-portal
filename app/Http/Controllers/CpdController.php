@@ -153,7 +153,9 @@ class CPDController extends Controller
             $q = $request->query('q', '');
             $type = $request->query('type', '');
 
-            $logs = CpdActivity::where('type', $type)
+            $logs = CpdActivity::when($type, function ($query) use ($type) {
+                    $query->where('type', $type);
+                })
                 ->when($q, function ($query) use ($q) {
                     $query->where('title', 'like', $q)->orWhere('description', 'like', $q);
                 })
