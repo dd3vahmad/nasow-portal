@@ -31,7 +31,7 @@ class Ticket extends Model
     /* Actions */
     public function close()
     {
-        $this->update(['closed_at' => now()]);
+        $this->update(['closed_at' => now(), 'status' => 'closed']);
     }
 
     public function changeStatus(string $status)

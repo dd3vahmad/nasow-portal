@@ -182,7 +182,7 @@ class TicketController extends Controller
         try {
             $ticket = Ticket::find($id);
             if (!$ticket) {
-                return ApiResponse::error('Ticket not found');
+                return ApiResponse::error('Ticket not found', 404);
             }
 
             return ApiResponse::success('Tickets fetched successfully', new TicketResource($ticket->load('messages')));
@@ -206,12 +206,12 @@ class TicketController extends Controller
 
             $ticket = Ticket::find($ticket_id);
             if (!$ticket) {
-                return ApiResponse::error('Ticket not found');
+                return ApiResponse::error('Ticket not found', 404);
             }
 
             $support = User::role('support-staff', 'api')->find($support_id);
             if (!$support) {
-                return ApiResponse::error('Support staff not found');
+                return ApiResponse::error('Support staff not found', 404);
             }
 
             $ticket->update([
@@ -224,6 +224,33 @@ class TicketController extends Controller
             ActionLogger::audit("Assigned ticket to {$support->name}", $user->id ?? null);
 
             return ApiResponse::success('Ticket assigned to support', new TicketResource($ticket));
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
+
+    /**
+     * Close ticket
+     *
+     * @param int $id
+     * @return ApiResponse
+     */
+    public function close(int $id) {
+        try {
+            $user = auth()->user();
+
+            $ticket = Ticket::find($id);
+            if (!$ticket) {
+                return ApiResponse::error('Ticket not found', 404);
+            }
+
+            $subject = $ticket->subject ?? null;
+            $ticket->close();
+
+            $user->sendClosedTicketNotification($ticket);
+            ActionLogger::audit("{$user->name} closed a ticket: {$subject}", $user->id ?? null);
+
+            return ApiResponse::success('Ticket closed', new TicketResource($ticket));
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
         }

@@ -2,13 +2,12 @@
 
 namespace App\Notifications;
 
-use App\Models\Ticket;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class AssignedTicket extends Notification
+class ClosedTicket extends Notification
 {
     use Queueable;
 
@@ -38,8 +37,8 @@ class AssignedTicket extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('New Ticket Assigned')
-            ->view('emails.assigned-ticket', [
+            ->subject('Issue Resolved')
+            ->view('emails.closed-ticket', [
                 'user' => $notifiable,
                 'ticket' => $this->ticket,
             ]);

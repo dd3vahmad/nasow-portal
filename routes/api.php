@@ -53,7 +53,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         /** Support Staff Only Routes */
         Route::middleware('role:support-staff')->group(function () {
-            Route::get('tickets/support', [TicketController::class, 'support']);
+            Route::get('/tickets/support', [TicketController::class, 'support']);
+            Route::post('/tickets/close/{id}', [TicketController::class, 'close']);
         });
 
         /** State Admin Only Routes */
