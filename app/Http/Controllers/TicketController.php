@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ActivityType;
 use App\Http\Requests\Ticket\AssignTicketRequest;
 use App\Http\Requests\Ticket\CreateTicketRequest;
 use App\Http\Resources\TicketResource;
@@ -9,6 +10,7 @@ use App\Http\Responses\ApiResponse;
 use App\Models\Ticket;
 use App\Models\TicketMessage;
 use App\Models\User;
+use App\Services\ActionLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -25,24 +27,31 @@ class TicketController extends Controller
         try {
             $user = auth()->user();
             $data = $request->validated();
+            $user_id = $user->id;
 
-            $ticket = DB::transaction(function () use ($user, $data) {
+            $ticket = DB::transaction(function () use ($user, $data, $user_id) {
                 $ticket = Ticket::create([
                     'subject' => $data['subject'],
                     'name' => $user->name,
                     'state' => $user->details->state ?? null,
                     'email' => $user->email,
                     'status' => 'pending',
-                    'user_id' => $user->id,
+                    'user_id' => $user_id,
                 ]);
 
                 $message = TicketMessage::create([
                     'message' => $data['message'],
                     'ticket_id' => $ticket->id,
-                    'sender_id' => $user->id,
+                    'sender_id' => $user_id,
                 ]);
 
                 $ticket->setRelation('messages', collect([$message]));
+                ActionLogger::log(
+                    ActivityType::SUPPORT->value,
+                    "Support ticket opened: {$data['subject']}",
+                    $user_id,
+                    $user->details()->state
+                );
 
                 return $ticket;
             });
@@ -194,6 +203,7 @@ class TicketController extends Controller
             $data = $request->validated();
             $ticket_id = $data['ticket_id'];
             $support_id = $data['support_id'];
+
             $ticket = Ticket::find($ticket_id);
             if (!$ticket) {
                 return ApiResponse::error('Ticket not found');
@@ -211,6 +221,7 @@ class TicketController extends Controller
                 'status' => 'open'
             ]);
             $support->sendAssignedTicketNotification($ticket);
+            ActionLogger::audit("Assigned ticket to {$support->name}", $user->id);
 
             return ApiResponse::success('Ticket assigned to support', new TicketResource($ticket));
         } catch (\Throwable $th) {
