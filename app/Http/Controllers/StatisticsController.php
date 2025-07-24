@@ -103,13 +103,29 @@ class StatisticsController extends Controller
             $incomplete_cpds = CpdLog::whereYear('created_at', Carbon::now()->year)
                 ->whereNull('completed_at')->count();
 
+            $payment_trends = [
+                'january' => 0,
+                'february' => 0,
+                'march' => 0,
+                'april' => 0,
+                'may' => 0,
+                'june' => 0,
+                'july' => 0,
+                'august' => 0,
+                'september' => 0,
+                'october' => 0,
+                'november' => 0,
+                'december' => 0,
+            ];
+
             $cpd_completion_rates = [
                 'completed' => $completed_cpds,
                 'incomplete' => $incomplete_cpds
             ];
 
             return ApiResponse::success('National admin dashboard charts fetched successfully', [
-                'cpd_completion_rate' => $cpd_completion_rates
+                'cpd_completion_rate' => $cpd_completion_rates,
+                'payments_over_time' => $payment_trends
             ]);
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
