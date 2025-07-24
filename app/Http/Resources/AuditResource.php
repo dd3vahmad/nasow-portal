@@ -16,7 +16,7 @@ class AuditResource extends JsonResource
     {
         return [
             'id' => $this->id ?? null,
-            'action' => $this->type ?? null,
+            'action' => $this->action ?? null,
             'meta' => $this->meta ?? null,
             'admin' => $this->whenLoaded('admin')->name ?? null,
             'occurred_at' => $this->created_at ?? null
