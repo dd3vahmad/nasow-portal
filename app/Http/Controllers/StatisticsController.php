@@ -68,7 +68,7 @@ class StatisticsController extends Controller
             $user = auth()->user();
             $userDetails = $user->details()->first();
 
-            $state = $user->getRoleNames()[0] === RoleType::StateAdmin->value ? $userDetails->state : '';
+            $state = $user->getRoleNames()[0] === RoleType::StateAdmin->value ? ($userDetails->state ?? null) : '';
             $state = $request->query('state', $state);
 
             $baseQuery = UserMemberships::whereHas('user', fn ($query) => $query->where('reg_status', 'done'))

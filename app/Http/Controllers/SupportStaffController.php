@@ -41,7 +41,7 @@ class SupportStaffController extends Controller
     public function state(Request $request) {
         try {
             $user = auth()->user();
-            $state = $user->details?->state;
+            $state = $user->details?->state ?? null;
 
             if (!$state) {
                 return ApiResponse::error('User state not found.');

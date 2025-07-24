@@ -20,7 +20,8 @@ class UserDetailsController extends Controller
      */
     public function store(StoreUserDetailsRequest $request) {
         try {
-            $user = Auth::user();
+            $user = auth()->user();
+            $user_id = $user->id ?? null;
             $detailsPayload = $request->validated();
 
             $details = [
@@ -33,11 +34,11 @@ class UserDetailsController extends Controller
                 'address' => $detailsPayload['address'],
                 'phone' => $detailsPayload['phone'],
                 'state' => $detailsPayload['state'],
-                'user_id' => $user->id,
+                'user_id' => $user_id,
             ];
 
             $user_details = UserDetails::createOrFirst($details);
-            $this->createMembership($detailsPayload['category'], $user->id);
+            $this->createMembership($detailsPayload['category'], $user_id);
             $user->update(['reg_status' => 'education']);
 
             return ApiResponse::success('User details added successfully', $user_details);
@@ -76,13 +77,13 @@ class UserDetailsController extends Controller
      */
     public function add_specialization(Request $request) {
         try {
-            $specialization = $request->area_of_specialization;
+            $specialization = $request->area_of_specialization ?? null;
             if (!$specialization) {
                 return ApiResponse::error('Area of specialization is required and must be a string');
             }
 
-            $user = Auth::user();
-            $user_details = UserDetails::where('user_id', $user->id)->first();
+            $user = auth()->user();
+            $user_details = UserDetails::where('user_id', $user->id ?? null)->first();
             $user_details->update(['specialization' => $specialization]);
             $user->update(['reg_status' => 'documents']);
 

@@ -20,29 +20,30 @@ class UserController extends Controller
         try {
             $user = Auth::user();
             $role = $user->getRoleNames()->first();
+            $user_id = $user->id ?? null;
 
-            $details = UserDetails::where('user_id', $user->id)->first();
+            $details = UserDetails::where('user_id', $user_id)->first();
 
             $user_details = [
-                'id' => $user->id,
+                'id' => $user_id,
                 'name' => $user->name,
                 'email' => $user->email,
                 'role' => $role,
-                'last_login' => $user->last_login,
-                'reg_status' => $user->reg_status,
+                'last_login' => $user->last_login ?? null,
+                'reg_status' => $user->reg_status ?? null,
             ];
 
             if ($details) {
                 $user_details = array_merge($user_details, [
-                    'first_name' => $details->first_name,
-                    'last_name' => $details->last_name,
-                    'other_name' => $details->other_name,
-                    'gender' => $details->gender,
-                    'dob' => $details->dob,
-                    'address' => $details->address,
-                    'specialization' => $details->specialization,
-                    'state' => $details->state,
-                    'phone' => $details->phone,
+                    'first_name' => $details->first_name ?? null,
+                    'last_name' => $details->last_name ?? null,
+                    'other_name' => $details->other_name ?? null,
+                    'gender' => $details->gender ?? null,
+                    'dob' => $details->dob ?? null,
+                    'address' => $details->address ?? null,
+                    'specialization' => $details->specialization ?? null,
+                    'state' => $details->state ?? null,
+                    'phone' => $details->phone ?? null,
                 ]);
             }
 
