@@ -95,4 +95,24 @@ class StatisticsController extends Controller
             return ApiResponse::error($th->getMessage());
         }
     }
+
+    public function national_charts() {
+        try {
+            $completed_cpds = CpdLog::whereYear('created_at', Carbon::now()->year)
+                ->whereNotNull('completed_at')->count();
+            $incomplete_cpds = CpdLog::whereYear('created_at', Carbon::now()->year)
+                ->whereNull('completed_at')->count();
+
+            $cpd_completion_rates = [
+                'completed' => $completed_cpds,
+                'incomplete' => $incomplete_cpds
+            ];
+
+            return ApiResponse::success('National admin dashboard charts fetched successfully', [
+                'cpd_completion_rate' => $cpd_completion_rates
+            ]);
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
 }

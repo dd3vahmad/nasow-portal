@@ -73,6 +73,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/supports', [SupportStaffController::class, 'index']);
             Route::get('/tickets', [TicketController::class, 'index']);
             Route::get('/stats/national', [StatisticsController::class, 'national']);
+            Route::get('charts/national', [StatisticsController::class, 'national_charts']);
         });
 
         /** National-Admin & State-Admin Only Routes */
