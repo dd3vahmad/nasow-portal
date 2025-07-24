@@ -48,7 +48,8 @@ class StatisticsController extends Controller
                 'open_tickets' => $totalOpenTickets,
                 'total_cpd_hours' => $totalCpdHours,
                 'avg_cpd_hours' => $avgCpdHours,
-                'dues' => 0
+                'dues' => 0,
+                'total_payments' => 0
             ];
 
             return ApiResponse::success('Stats fetched successfully', $stats);
@@ -96,12 +97,24 @@ class StatisticsController extends Controller
         }
     }
 
+    /**
+     * Get national admin's chart data
+     * @return ApiResponse
+     */
     public function national_charts() {
         try {
+            $baseQuery = User::role('member', 'api')->where('reg_status', 'done');
             $completed_cpds = CpdLog::whereYear('created_at', Carbon::now()->year)
                 ->whereNotNull('completed_at')->count();
             $incomplete_cpds = CpdLog::whereYear('created_at', Carbon::now()->year)
                 ->whereNull('completed_at')->count();
+
+            $members_per_state = (clone $baseQuery)
+                ->get()
+                ->groupBy(fn($log) => optional($log->details)->state ?? 'others')
+                ->map(function ($group) {
+                    return $group->count();
+                });
 
             $payment_trends = [
                 'january' => 0,
@@ -123,9 +136,20 @@ class StatisticsController extends Controller
                 'incomplete' => $incomplete_cpds
             ];
 
+            // TODO: Populate $payment_trends from actual payment data
+            // Payment::whereYear('created_at', Carbon::now()->year)
+            //     ->selectRaw('MONTH(created_at) as month, COUNT(*) as count')
+            //     ->groupBy('month')
+            //     ->get()
+            //     ->each(function($item) use (&$payment_trends) {
+            //         $monthName = strtolower(Carbon::create()->month($item->month)->format('F'));
+            //         $payment_trends[$monthName] = $item->count;
+            //     });
+
             return ApiResponse::success('National admin dashboard charts fetched successfully', [
                 'cpd_completion_rate' => $cpd_completion_rates,
-                'payments_over_time' => $payment_trends
+                'payments_over_time' => $payment_trends,
+                'members_per_state' => $members_per_state
             ]);
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
