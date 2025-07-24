@@ -50,7 +50,7 @@ class CPDController extends Controller
                 $details['certificate_url'] = $secure_url;
             }
             $activity = CpdActivity::create($details)->get();
-            ActionLogger::audit("CPD activity created: {$data['title']}", $user->id);
+            ActionLogger::audit("CPD activity created: {$data['title']}", $user->id ?? null);
 
             return ApiResponse::success('Activity created successfully', $activity);
         } catch (\Throwable $th) {
@@ -67,6 +67,7 @@ class CPDController extends Controller
     public function log(LogCpdActivityRequest $request) {
         try {
             $user = auth()->user();
+            $user_id = $user->id ?? null;
             $data = $request->validated();
             $certificate = $data['certificate'] ?? null;
             $activity_id = $data['activity_id'] ?? null;
@@ -75,7 +76,7 @@ class CPDController extends Controller
                 'title' => $data['title'],
                 'description' => $data['description'],
                 'completed_at' => $data['completed_at'],
-                'member_id' => $user->id,
+                'member_id' => $user_id,
             ];
 
             if (isset($activity_id)) {
@@ -84,7 +85,7 @@ class CPDController extends Controller
                     return ApiResponse::error('Cpd activity with this id not found', 404);
                 }
                 $details['activity_id'] = $activity_id;
-                $details['credit_hours'] = $activity->credit_hours;
+                $details['credit_hours'] = $activity->credit_hours ?? null;
             } else {
                 $details['credit_hours'] = $data['credit_hours'];
             }
@@ -106,8 +107,8 @@ class CPDController extends Controller
             ActionLogger::log(
                 ActivityType::CPD->value,
                 "CPD logged: {$user->name}",
-                $user->id,
-                $user->details->state
+                $user_id,
+                $user->details->state ?? null
             );
 
             return ApiResponse::success('Log created successfully', $log);
@@ -164,7 +165,7 @@ class CPDController extends Controller
     public function state(Request $request) {
         try {
             $user = auth()->user();
-            $state = $user->details->state;
+            $state = $user->details->state ?? null;
             $status = $request->query('status', '');
             $q = $request->query('q', '');
             $type = $request->query('type', '');
@@ -259,7 +260,8 @@ class CPDController extends Controller
                 return ApiResponse::error('Cpd log not found');
             }
             $log->update([ 'status' => 'approved' ]);
-            ActionLogger::audit("CPD log approved: {$log->title}", $user->id);
+            $title = $log->title ?? '';
+            ActionLogger::audit("CPD log approved: {$title}", $user->id ?? null);
 
             return ApiResponse::success('Log approved successfully', $log);
         } catch (\Throwable $th) {
@@ -281,7 +283,8 @@ class CPDController extends Controller
                 return ApiResponse::error('Cpd log not found');
             }
             $log->update([ 'status' => 'rejected' ]);
-            ActionLogger::audit("CPD log rejected: {$log->title}", $user->id);
+            $title = $log->title ?? '';
+            ActionLogger::audit("CPD log rejected: {$title}", $user->id ?? null);
 
             return ApiResponse::success('Log approved successfully', $log);
         } catch (\Throwable $th) {
@@ -299,11 +302,13 @@ class CPDController extends Controller
     {
         try {
             $user = auth()->user();
-            $total = CpdLog::where('member_id', $user->id)
+            $user_id = $user->id ?? null;
+
+            $total = CpdLog::where('member_id', $user_id)
                 ->where('status', 'approved')
                 ->sum('credit_hours');
 
-            $types = CpdLog::where('member_id', $user->id)
+            $types = CpdLog::where('member_id', $user_id)
                 ->whereYear('created_at', Carbon::now()->year)
                 ->where('status', 'approved')->with('activity')
                 ->get()
@@ -336,7 +341,7 @@ class CPDController extends Controller
             $q = $request->query('q', '');
             $type = $request->query('type', '');
 
-            $logs = CpdLog::where('member_id', $user->id)
+            $logs = CpdLog::where('member_id', $user->id ?? null)
                 ->when($status, function ($query) use ($status) {
                     $query->where('status', $status);
                 })

@@ -22,7 +22,7 @@ class ActionController extends Controller
             $query = Activity::latest()->limit(20);
 
             if ($user->hasRole('state-admin')) {
-                $query->where('state', $user->details->state);
+                $query->where('state', $user->details->state ?? null);
             }
 
             $recent_activities = $query->get();

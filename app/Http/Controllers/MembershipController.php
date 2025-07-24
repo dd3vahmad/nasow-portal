@@ -62,9 +62,9 @@ class MembershipController extends Controller {
     {
         try {
             $user = auth()->user();
-            $userDetails = $user->details()->first();
+            $userDetails = $user->details;
 
-            $state = $userDetails->state;
+            $state = $userDetails->state ?? null;
             $status = $request->query('status');
             $search = $request->query('q');
 
@@ -138,7 +138,7 @@ class MembershipController extends Controller {
                 'suspended_at' => null
             ]);
 
-            $user = User::where('id', $membership->user_id)->first();
+            $user = User::where('id', $membership->user_id ?? null)->first();
             $generator = new MembershipNumberGenerator();
             $membership_no = $generator->generate('NASOW');
             $role = Role::firstOrCreate(
@@ -169,7 +169,7 @@ class MembershipController extends Controller {
                 throw new \Exception('Membership not found');
             }
 
-            $user = User::where('id', $membership->user_id)->first();
+            $user = User::where('id', $membership->user_id ?? null)->first();
 
             if (!$membership) {
                 throw new \Exception('Membership not found');
@@ -220,11 +220,11 @@ class MembershipController extends Controller {
         try {
             $user = auth()->user();
 
-            if ($user->reg_status !== "review") {
+            if (($user->reg_status ?? null) !== "review") {
                 throw new \Exception('Complete membership details before confirming', 1);
             }
 
-            $unverified_membership = UserMemberships::where('user_id', $user->id)->where('status', 'unverified')->first();
+            $unverified_membership = UserMemberships::where('user_id', $user->id ?? null)->where('status', 'unverified')->first();
             if (!$unverified_membership) {
                 throw new \Exception("You do not have an active and unverified membership.", 1);
             }
