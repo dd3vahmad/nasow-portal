@@ -50,7 +50,7 @@ class TicketController extends Controller
                     ActivityType::SUPPORT->value,
                     "Support ticket opened: {$data['subject']}",
                     $user_id,
-                    $user->details()->state
+                    $user->details->state
                 );
 
                 return $ticket;
@@ -128,7 +128,7 @@ class TicketController extends Controller
             $q = $request->query('q', '');
             $user = auth()->user();
 
-            $tickets = Ticket::where('state', $user->details()->getAttribute('state'))
+            $tickets = Ticket::where('state', $user->details->state)
                 ->when($status, function ($query) use ($status) {
                     $query->where('status', $status);
                 })

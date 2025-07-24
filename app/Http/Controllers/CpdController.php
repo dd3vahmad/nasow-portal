@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ActivityType;
 use App\Http\Requests\CPD\StoreCpdActivityRequest;
 use App\Http\Requests\CPD\LogCpdActivityRequest;
 use App\Http\Resources\CpdActivityResource;
@@ -9,6 +10,7 @@ use App\Http\Resources\CpdLogResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\CpdActivity;
 use App\Models\CpdLog;
+use App\Services\ActionLogger;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -22,6 +24,7 @@ class CPDController extends Controller
      */
     public function store(StoreCpdActivityRequest $request) {
         try {
+            $user = auth()->user();
             $data = $request->validated();
             $certificate = $data['certificate'] ?? null;
 
@@ -47,6 +50,7 @@ class CPDController extends Controller
                 $details['certificate_url'] = $secure_url;
             }
             $activity = CpdActivity::create($details)->get();
+            ActionLogger::audit("CPD activity created: {$data['title']}", $user->id);
 
             return ApiResponse::success('Activity created successfully', $activity);
         } catch (\Throwable $th) {
@@ -99,6 +103,12 @@ class CPDController extends Controller
                 $details['certificate_url'] = $secure_url;
             }
             $log = CpdLog::create($details)->get();
+            ActionLogger::log(
+                ActivityType::CPD->value,
+                "CPD logged: {$user->name}",
+                $user->id,
+                $user->details->state
+            );
 
             return ApiResponse::success('Log created successfully', $log);
         } catch (\Throwable $th) {
@@ -243,11 +253,13 @@ class CPDController extends Controller
      */
     public function approve(int $id) {
         try {
+            $user = auth()->user();
             $log = CpdLog::find($id);
             if (!$log) {
                 return ApiResponse::error('Cpd log not found');
             }
             $log->update([ 'status' => 'approved' ]);
+            ActionLogger::audit("CPD log approved: {$log->title}", $user->id);
 
             return ApiResponse::success('Log approved successfully', $log);
         } catch (\Throwable $th) {
@@ -263,11 +275,13 @@ class CPDController extends Controller
      */
     public function reject(int $id) {
         try {
+            $user = auth()->user();
             $log = CpdLog::find($id);
             if (!$log) {
                 return ApiResponse::error('Cpd log not found');
             }
             $log->update([ 'status' => 'rejected' ]);
+            ActionLogger::audit("CPD log rejected: {$log->title}", $user->id);
 
             return ApiResponse::success('Log approved successfully', $log);
         } catch (\Throwable $th) {
