@@ -58,12 +58,12 @@ class User extends Authenticatable implements MustVerifyEmail
     /** Password / email verification overrides */
     public function getAuthPassword()
     {
-        return optional($this->credentials)->password;
+        return optional($this->credentials)->password ?? null;
     }
 
     public function getEmailVerifiedAtAttribute()
     {
-        return optional($this->credentials)->email_verified_at;
+        return optional($this->credentials)->email_verified_at ?? null;
     }
 
     public function hasVerifiedEmail(): bool
