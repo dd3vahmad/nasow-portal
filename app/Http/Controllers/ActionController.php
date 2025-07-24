@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\ActivityResource;
+use App\Http\Resources\AuditResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Activity;
 use App\Models\AuditLog;
@@ -19,7 +21,7 @@ class ActionController extends Controller
         try {
             $user = auth()->user();
 
-            $query = Activity::latest()->limit(20);
+            $query = Activity::latest()->with('user')->limit(20);
 
             if ($user->hasRole('state-admin')) {
                 $query->where('state', $user->details->state ?? null);
@@ -27,7 +29,7 @@ class ActionController extends Controller
 
             $recent_activities = $query->get();
 
-            return ApiResponse::success('Recent activities fetched successfully', $recent_activities);
+            return ApiResponse::success('Recent activities fetched successfully', ActivityResource::collection($recent_activities));
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
         }
@@ -43,7 +45,7 @@ class ActionController extends Controller
         try {
             $audit_logs = AuditLog::with('admin')->latest()->limit(50)->get();
 
-            return ApiResponse::success('Recent activities fetched successfully', $audit_logs);
+            return ApiResponse::success('Recent activities fetched successfully', AuditResource::collection($audit_logs));
         } catch (\Throwable $th) {
            return ApiResponse::error($th->getMessage());
         }

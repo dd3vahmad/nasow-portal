@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class CpdActivityResource extends JsonResource
+class ActivityResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -16,12 +16,12 @@ class CpdActivityResource extends JsonResource
     {
         return [
             'id' => $this->id ?? null,
-            'title' => $this->title ?? null,
-            'description' => $this->description ?? null,
             'type' => $this->type ?? null,
-            'credit_hours' => $this->credit_hours ?? null,
-            'hosting_body' => $this->hosting_body ?? null,
-            'certificate_url' => $this->certificate_url ?? null,
+            'description' => $this->description ?? null,
+            'state' => $this->state ?? null,
+            'meta' => $this->meta ?? null,
+            'user' => $this->whenLoaded('user')->name ?? null,
+            'occurred_at' => $this->created_at ?? null
         ];
     }
 }
