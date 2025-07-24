@@ -104,7 +104,7 @@ class StatisticsController extends Controller
     public function national_charts() {
         try {
             $baseQuery = User::role('member', 'api')->where('reg_status', 'done');
-            $completed_cpds = CpdLog::whereYear('created_at', Carbon::now()->year)
+            $completed_cpds = CpdLog::where('status', 'approved')->whereYear('created_at', Carbon::now()->year)
                 ->whereNotNull('completed_at')->count();
             $incomplete_cpds = CpdLog::whereYear('created_at', Carbon::now()->year)
                 ->whereNull('completed_at')->count();
@@ -116,40 +116,111 @@ class StatisticsController extends Controller
                     return $group->count();
                 });
 
-            $payment_trends = [
-                'january' => 0,
-                'february' => 0,
-                'march' => 0,
-                'april' => 0,
-                'may' => 0,
-                'june' => 0,
-                'july' => 0,
-                'august' => 0,
-                'september' => 0,
-                'october' => 0,
-                'november' => 0,
-                'december' => 0,
-            ];
+            // Payment trends (count by month)
+            $payment_trends = collect(range(1, 12))
+                ->mapWithKeys(fn($m) => [strtolower(Carbon::create()->month($m)->format('F')) => 0])
+                ->toArray();
+
+            // Payment::whereBetween('created_at', [$from, $to])
+            //     ->selectRaw('MONTH(created_at) as month, COUNT(*) as count')
+            //     ->groupBy('month')
+            //     ->get()
+            //     ->each(function ($item) use (&$payment_trends) {
+            //         $monthName = strtolower(Carbon::create()->month($item->month)->format('F'));
+            //         $payment_trends[$monthName] = $item->count;
+            //     });
 
             $cpd_completion_rates = [
                 'completed' => $completed_cpds,
                 'incomplete' => $incomplete_cpds
             ];
 
-            // TODO: Populate $payment_trends from actual payment data
-            // Payment::whereYear('created_at', Carbon::now()->year)
-            //     ->selectRaw('MONTH(created_at) as month, COUNT(*) as count')
-            //     ->groupBy('month')
-            //     ->get()
-            //     ->each(function($item) use (&$payment_trends) {
-            //         $monthName = strtolower(Carbon::create()->month($item->month)->format('F'));
-            //         $payment_trends[$monthName] = $item->count;
-            //     });
-
             return ApiResponse::success('National admin dashboard charts fetched successfully', [
                 'cpd_completion_rate' => $cpd_completion_rates,
                 'payments_over_time' => $payment_trends,
                 'members_per_state' => $members_per_state
+            ]);
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
+
+    public function national_breakdown(Request $request) {
+        try {
+            $from = $request->query('from') ? Carbon::parse($request->query('from'))->startOfDay() : Carbon::now()->startOfYear();
+            $to = $request->query('to') ? Carbon::parse($request->query('to'))->endOfDay() : Carbon::now()->endOfYear();
+
+            $baseQuery = User::role('member', 'api')->where('reg_status', 'done');
+
+            // CPD completion rate
+            $completed_cpds = CpdLog::whereBetween('created_at', [$from, $to])
+                ->whereNotNull('completed_at')
+                ->count();
+
+            $incomplete_cpds = CpdLog::whereBetween('created_at', [$from, $to])
+                ->whereNull('completed_at')
+                ->count();
+
+            $cpd_completion_rate = [
+                'completed' => $completed_cpds,
+                'incomplete' => $incomplete_cpds
+            ];
+
+            // Members per state
+            $members_per_state = (clone $baseQuery)
+                ->get()
+                ->groupBy(fn($log) => optional($log->details)->state ?? 'others')
+                ->map(fn($group) => $group->count());
+
+            // Top 5 CPD contributors (by total credit hours)
+            $top_cpd_contributors = CpdLog::where('status', 'approved')
+                ->whereBetween('created_at', [$from, $to])
+                ->whereNotNull('completed_at')
+                ->selectRaw('member_id, SUM(credit_hours) as total_hours')
+                ->groupBy('member_id')
+                ->orderByDesc('total_hours')
+                ->take(5)
+                ->with('member:id,name')
+                ->get()
+                ->map(fn($log) => [
+                    'member_name' => optional($log->member)->name ?? 'Unknown',
+                    'total_hours' => (float) $log->total_hours,
+                ]);
+
+            // Payment trends (count by month)
+            $payment_trends = collect(range(1, 12))
+                ->mapWithKeys(fn($m) => [strtolower(Carbon::create()->month($m)->format('F')) => 0])
+                ->toArray();
+
+            // Payment::whereBetween('created_at', [$from, $to])
+            //     ->selectRaw('MONTH(created_at) as month, COUNT(*) as count')
+            //     ->groupBy('month')
+            //     ->get()
+            //     ->each(function ($item) use (&$payment_trends) {
+            //         $monthName = strtolower(Carbon::create()->month($item->month)->format('F'));
+            //         $payment_trends[$monthName] = $item->count;
+            //     });
+
+            // Membership growth per month
+            $membership_growth_per_month = collect(range(1, 12))
+                ->mapWithKeys(fn($m) => [strtolower(Carbon::create()->month($m)->format('F')) => 0])
+                ->toArray();
+
+            UserMemberships::whereBetween('verified_at', [$from, $to])
+                ->selectRaw('MONTH(verified_at) as month, COUNT(*) as count')
+                ->groupBy('month')
+                ->get()
+                ->each(function ($item) use (&$membership_growth_per_month) {
+                    $monthName = strtolower(Carbon::create()->month($item->month)->format('F'));
+                    $membership_growth_per_month[$monthName] = $item->count;
+                });
+
+            return ApiResponse::success('National report charts fetched successfully', [
+                'cpd_completion_rate' => $cpd_completion_rate,
+                'payments_over_time' => $payment_trends,
+                'members_per_state' => $members_per_state,
+                'top_cpd_contributors' => $top_cpd_contributors,
+                'membership_growth_per_month' => $membership_growth_per_month,
             ]);
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
