@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Responses\ApiResponse;
 use App\Models\Activity;
 use App\Models\AuditLog;
 use Illuminate\Http\Request;
@@ -15,23 +16,36 @@ class ActionController extends Controller
      */
     public function recentActivities(Request $request)
     {
-        $user = auth()->user();
+        try {
+            $user = auth()->user();
 
-        $query = Activity::latest()->limit(20);
+            $query = Activity::latest()->limit(20);
 
-        if ($user->hasRole('state-admin')) {
-            $query->where('state_id', $user->details->state_id);
+            if ($user->hasRole('state-admin')) {
+                $query->where('state', $user->details->state);
+            }
+
+            $recent_activities = $query->get();
+
+            return ApiResponse::success('Recent activities fetched successfully', $recent_activities);
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
         }
-
-        return response()->json($query->get());
     }
 
     /**
      * Get admins audit logs
-     * @return \Illuminate\Support\Collection<int, \stdClass>
+     *
+     * @return ApiResponse
      */
     public function auditLogs()
     {
-        return AuditLog::with('admin')->latest()->limit(50)->get();
+        try {
+            $audit_logs = AuditLog::with('admin')->latest()->limit(50)->get();
+
+            return ApiResponse::success('Recent activities fetched successfully', $audit_logs);
+        } catch (\Throwable $th) {
+           return ApiResponse::error($th->getMessage());
+        }
     }
 }

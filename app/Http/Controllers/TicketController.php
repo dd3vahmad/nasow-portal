@@ -27,7 +27,7 @@ class TicketController extends Controller
         try {
             $user = auth()->user();
             $data = $request->validated();
-            $user_id = $user->id;
+            $user_id = $user->id ?? null;
 
             $ticket = DB::transaction(function () use ($user, $data, $user_id) {
                 $ticket = Ticket::create([
@@ -41,7 +41,7 @@ class TicketController extends Controller
 
                 $message = TicketMessage::create([
                     'message' => $data['message'],
-                    'ticket_id' => $ticket->id,
+                    'ticket_id' => $ticket->id ?? null,
                     'sender_id' => $user_id,
                 ]);
 
@@ -50,7 +50,7 @@ class TicketController extends Controller
                     ActivityType::SUPPORT->value,
                     "Support ticket opened: {$data['subject']}",
                     $user_id,
-                    $user->details->state
+                    $user->details->state ?? null
                 );
 
                 return $ticket;
@@ -74,7 +74,7 @@ class TicketController extends Controller
             $q = $request->query('q', '');
             $user = auth()->user();
 
-            $tickets = Ticket::where('user_id', $user->id)
+            $tickets = Ticket::where('user_id', $user->id ?? null)
                 ->when($status, function ($query) use ($status) {
                     $query->where('status', $status);
                 })
@@ -101,7 +101,7 @@ class TicketController extends Controller
             $q = $request->query('q', '');
             $user = auth()->user();
 
-            $tickets = Ticket::where('assigned_to', $user->id)
+            $tickets = Ticket::where('assigned_to', $user->id ?? null)
                 ->when($status, function ($query) use ($status) {
                     $query->where('status', $status);
                 })
@@ -128,7 +128,7 @@ class TicketController extends Controller
             $q = $request->query('q', '');
             $user = auth()->user();
 
-            $tickets = Ticket::where('state', $user->details->state)
+            $tickets = Ticket::where('state', $user->details->state ?? null)
                 ->when($status, function ($query) use ($status) {
                     $query->where('status', $status);
                 })
@@ -217,11 +217,11 @@ class TicketController extends Controller
             $ticket->update([
                 'assigned_to' => $support_id,
                 'assigned_at' => now(),
-                'assigned_by' => $user->id,
+                'assigned_by' => $user->id ?? null,
                 'status' => 'open'
             ]);
             $support->sendAssignedTicketNotification($ticket);
-            ActionLogger::audit("Assigned ticket to {$support->name}", $user->id);
+            ActionLogger::audit("Assigned ticket to {$support->name}", $user->id ?? null);
 
             return ApiResponse::success('Ticket assigned to support', new TicketResource($ticket));
         } catch (\Throwable $th) {

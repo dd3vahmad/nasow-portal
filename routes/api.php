@@ -94,6 +94,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::middleware('role:member|support-staff|state-admin|national-admin')->group( function () {
             Route::get('/tickets/{id}', [TicketController::class, 'view']);
             Route::get('/cpd/activities', [CpdController::class, 'current']);
+            Route::get('/actions/activities', [ActionController::class, 'recentActivities']);
         });
     });
 });

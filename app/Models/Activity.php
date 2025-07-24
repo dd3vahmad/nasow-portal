@@ -10,7 +10,7 @@ class Activity extends Model
         'type',
         'description',
         'user_id',
-        'state_id',
+        'state',
         'meta'
     ];
 
