@@ -10,14 +10,14 @@ class ActionLogger {
         string $type,
         string $description,
         ?int $userId = null,
-        ?int $stateId = null,
+        ?string $state = null,
         array $meta = []
     ): void {
         Activity::create([
             'type' => $type,
             'description' => $description,
             'user_id' => $userId,
-            'state_id' => $stateId,
+            'state' => $state,
             'meta' => json_encode($meta),
         ]);
     }
