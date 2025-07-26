@@ -145,7 +145,7 @@ class MembershipController extends Controller {
                 ['name' => 'member'],
                 ['guard_name' => 'api']
             );
-            $user->details()->update([ 'no' => $membership_no ]);
+            $user->update([ 'no' => $membership_no ]);
             $user->assignRole($role);
             $user->sendMembershipApprovedNotification();
 

@@ -18,7 +18,7 @@ class MemberResource extends JsonResource
             'id' => $this->user_id ?? null,
             'membership_id' => $this->id ?? null,
             'name' => $this->user->name ?? null,
-            'no' => $this->no ?? null,
+            'no' => $this->user->no ?? null,
             'category' => $this->category ?? null,
             'status' => $this->status ?? null,
             'email' => $this->user->email ?? null,
