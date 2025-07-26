@@ -56,6 +56,21 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(UserMemberships::class);
     }
 
+    public function educations()
+    {
+        return $this->hasMany(UserEducations::class);
+    }
+
+    public function employments()
+    {
+        return $this->hasMany(UserEmployment::class);
+    }
+
+    public function documents()
+    {
+        return $this->hasMany(UserDocument::class);
+    }
+
     /** Password / email verification overrides */
     public function getAuthPassword()
     {
