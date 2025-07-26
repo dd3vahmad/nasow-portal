@@ -26,8 +26,10 @@ class UserEmploymentsController extends Controller
 
             foreach ($employmentsPayload as $employmentData) {
                 $employmentData['user_id'] = $user->id;
-                $employmentData['start_date'] = Carbon::parse($employmentData['start_date'])->toDateString();
-                $employmentData['end_date'] = Carbon::parse($employmentData['end_date'])->toDateString();
+                $start_date = isset($employmentData['start_date']) ? $employmentData['start_date'] : null;
+                $end_date = isset($employmentData['end_date']) ? $employmentData['end_date'] : null;
+                $employmentData['start_date'] = Carbon::parse($start_date)->toDateString();
+                $employmentData['end_date'] = Carbon::parse($end_date)->toDateString();
 
                 $employment = UserEmployment::create($employmentData);
 
