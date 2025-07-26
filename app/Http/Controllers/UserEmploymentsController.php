@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\UserEmployment\StoreUserEmploymentsRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\UserEmployment;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 class UserEmploymentsController extends Controller
@@ -25,6 +26,8 @@ class UserEmploymentsController extends Controller
 
             foreach ($employmentsPayload as $employmentData) {
                 $employmentData['user_id'] = $user->id;
+                $employmentData['start_date'] = Carbon::parse($employmentData['start_date'])->toDateString();
+                $employmentData['end_date'] = Carbon::parse($employmentData['end_date'])->toDateString();
 
                 $employment = UserEmployment::create($employmentData);
 

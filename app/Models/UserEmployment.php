@@ -8,7 +8,21 @@ use Illuminate\Database\Eloquent\Model;
 class UserEmployment extends Model {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'employer', 'employer_address', 'role', 'is_current', 'year'];
+    protected $fillable = [
+        'user_id',
+        'employer',
+        'employer_address',
+        'role',
+        'is_current',
+        'start_date',
+        'end_date'
+    ];
+    
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'is_current' => 'boolean',
+    ];
 
     /* Relation */
     public function user()
