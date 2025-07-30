@@ -120,7 +120,8 @@ class MembershipController extends Controller {
      * @param int $id
      * @return \Illuminate\Http\JsonResponse
      */
-    public function approve(int $id) {
+    public function approve(int $id)
+    {
         try {
             $user = auth()->user();
             $membership = UserMemberships::find($id);
@@ -132,23 +133,29 @@ class MembershipController extends Controller {
             $verifiedAt = now();
             $expiresAt = $verifiedAt->copy()->addYear();
 
-            $membership->update([
+            $updateData = [
                 'status' => 'verified',
-                'reviewed' => true,
-                'reviewed_by' => $user->id,
                 'verified_at' => $verifiedAt,
                 'expires_at' => $expiresAt,
                 'suspended_at' => null
-            ]);
+            ];
 
-            $member = User::where('id', $membership->user_id ?? null)->first();
+            if (!$membership->reviewed && $membership->reviewed_by === null) {
+                $updateData['reviewed'] = true;
+                $updateData['reviewed_by'] = $user->id;
+            }
+
+            $membership->update($updateData);
+
+            $member = User::find($membership->user_id);
             $generator = new MembershipNumberGenerator();
             $membership_no = $generator->generate('NASOW');
             $role = Role::firstOrCreate(
                 ['name' => 'member'],
                 ['guard_name' => 'api']
             );
-            $member->update([ 'no' => $membership_no ]);
+
+            $member->update(['no' => $membership_no]);
             $member->assignRole($role);
             $member->sendMembershipApprovedNotification();
 
@@ -164,26 +171,33 @@ class MembershipController extends Controller {
      * @param int $id
      * @return \Illuminate\Http\JsonResponse
      */
-    public function suspend(int $id) {
+    public function suspend(int $id)
+    {
         try {
             $user = auth()->user();
             $membership = UserMemberships::find($id);
+
             if (!$membership) {
                 throw new \Exception('Membership not found');
             }
 
-            $member = User::where('id', $membership->user_id ?? null)->first();
+            $member = User::find($membership->user_id);
             if (!$member) {
                 throw new \Exception('Member not found');
             }
-            $suspendedAt = now();
 
-            $membership->update([
+            $updateData = [
                 'status' => 'suspended',
-                'reviewed' => true,
-                'reviewed_by' => $user->id,
-                'suspended_at' => $suspendedAt,
-            ]);
+                'suspended_at' => now()
+            ];
+
+            if (!$membership->reviewed && $membership->reviewed_by === null) {
+                $updateData['reviewed'] = true;
+                $updateData['reviewed_by'] = $user->id;
+            }
+
+            $membership->update($updateData);
+
             $member->sendMembershipSuspendedNotification();
 
             return ApiResponse::success('Membership suspended successfully', $membership);
@@ -282,6 +296,13 @@ class MembershipController extends Controller {
         }
     }
 
+    /**
+     * Set membership as reviewed
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int $id
+     * @return ApiResponse
+     */
     public function review(Request $request, int $id)
     {
         try {
@@ -299,9 +320,9 @@ class MembershipController extends Controller {
                 'reviewed_by' => $user->id
             ]);
 
-            return ApiResponse::success('Membership reviewed successfully');
+            return ApiResponse::success('Membership reviewed successfully', $membership);
         } catch (\Throwable $th) {
-            return ApiResponse::error($th->getMessage(), 500);
+            return ApiResponse::error($th->getMessage());
         }
     }
 }
