@@ -25,7 +25,7 @@ class MembershipController extends Controller {
             $status = $request->query('status');
             $search = $request->query('q');
 
-            $members = UserMemberships::where('reviewed', true)->whereHas('user', function ($q) use ($search) {
+            $members = UserMemberships::whereHas('user', function ($q) use ($search) {
                     $q->where('reg_status', 'done');
 
                     if ($search) {
@@ -68,7 +68,7 @@ class MembershipController extends Controller {
             $status = $request->query('status');
             $search = $request->query('q');
 
-            $members = UserMemberships::where('reviewed', true)->whereHas('user', function ($query) use ($search) {
+            $members = UserMemberships::whereHas('user', function ($query) use ($search) {
                     $query->where('reg_status', 'done');
 
                     if ($search) {
@@ -122,6 +122,7 @@ class MembershipController extends Controller {
      */
     public function approve(int $id) {
         try {
+            $user = auth()->user();
             $membership = UserMemberships::find($id);
 
             if (!$membership) {
@@ -133,21 +134,23 @@ class MembershipController extends Controller {
 
             $membership->update([
                 'status' => 'verified',
+                'reviewed' => true,
+                'reviewed_by' => $user->id,
                 'verified_at' => $verifiedAt,
                 'expires_at' => $expiresAt,
                 'suspended_at' => null
             ]);
 
-            $user = User::where('id', $membership->user_id ?? null)->first();
+            $member = User::where('id', $membership->user_id ?? null)->first();
             $generator = new MembershipNumberGenerator();
             $membership_no = $generator->generate('NASOW');
             $role = Role::firstOrCreate(
                 ['name' => 'member'],
                 ['guard_name' => 'api']
             );
-            $user->update([ 'no' => $membership_no ]);
-            $user->assignRole($role);
-            $user->sendMembershipApprovedNotification();
+            $member->update([ 'no' => $membership_no ]);
+            $member->assignRole($role);
+            $member->sendMembershipApprovedNotification();
 
             return ApiResponse::success('Membership approved successfully', $membership);
         } catch (\Throwable $th) {
@@ -163,25 +166,25 @@ class MembershipController extends Controller {
      */
     public function suspend(int $id) {
         try {
+            $user = auth()->user();
             $membership = UserMemberships::find($id);
-
             if (!$membership) {
                 throw new \Exception('Membership not found');
             }
 
-            $user = User::where('id', $membership->user_id ?? null)->first();
-
-            if (!$membership) {
-                throw new \Exception('Membership not found');
+            $member = User::where('id', $membership->user_id ?? null)->first();
+            if (!$member) {
+                throw new \Exception('Member not found');
             }
-
             $suspendedAt = now();
 
             $membership->update([
                 'status' => 'suspended',
+                'reviewed' => true,
+                'reviewed_by' => $user->id,
                 'suspended_at' => $suspendedAt,
             ]);
-            $user->sendMembershipSuspendedNotification();
+            $member->sendMembershipSuspendedNotification();
 
             return ApiResponse::success('Membership suspended successfully', $membership);
         } catch (\Throwable $th) {
@@ -279,7 +282,23 @@ class MembershipController extends Controller {
         }
     }
 
-    public function review() {
+    public function review(Request $request, int $id) {
+        try {
+            $user = auth()->user();
 
+            $comment = $request->validate([
+                'comment' => 'required|string|max:255'
+            ]);
+            $membership = UserMemberships::find($id);
+            $membership->update([
+                'comment' => $comment,
+                'reviewed' => true,
+                'reviewed_by' => $user->id
+            ]);
+
+            return ApiResponse::success('Membership reviewed successfully');
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage(), 500);
+        }
     }
 }

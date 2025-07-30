@@ -24,6 +24,8 @@ class MembersResource extends JsonResource
             'state' => $this->user->details->state ?? null,
             'status' => $this->status ?? null,
             'category' => $this->category ?? null,
+            'reviewed' => $this->reviewed ? true : false,
+            'comment' => $this->comment ?? null,
             'registration_date' => $this->created_at ?? null,
         ];
     }

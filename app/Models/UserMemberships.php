@@ -10,12 +10,18 @@ use Illuminate\Database\Eloquent\Model;
 class UserMemberships extends Model {
     use HasFactory;
 
-    protected $fillable = ['category', 'status', 'verified_at', 'expires_at', 'user_id', 'reviewed', 'comment'];
+    protected $fillable = ['category', 'status', 'verified_at', 'expires_at', 'user_id', 'reviewed', 'reviewed_by', 'comment'];
 
     /* Relation */
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /* Relation */
+    public function reviewer()
+    {
+        return $this->belongsTo(User::class, 'reviewed_by');
     }
 
     /**
