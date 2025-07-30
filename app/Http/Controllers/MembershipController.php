@@ -240,18 +240,20 @@ class MembershipController extends Controller {
     }
 
     /**
-     * Get memberships for review by support staff
+     * Get memberships for review by case manager
      *
      * @param \Illuminate\Http\Request $request
      * @return ApiResponse
      */
-    public function support(Request $request) {
+    public function cases(Request $request) {
         try {
             $state = $request->query('state');
             $status = $request->query('status');
             $search = $request->query('q');
 
-            $memberships = UserMemberships::where('reviewed', false)->whereHas('user', function ($q) use ($search) {
+            $memberships = UserMemberships::where('reviewed', false)
+                ->where('status', '!=', 'verified')
+                ->whereHas('user', function ($q) use ($search) {
                     $q->where('reg_status', 'done');
 
                     if ($search) {

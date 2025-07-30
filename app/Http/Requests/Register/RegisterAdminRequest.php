@@ -34,7 +34,7 @@ class RegisterAdminRequest extends BaseRequest {
             'address' => 'required|string|max:225',
             'avatar' => 'nullable|file|max:2048',
             'phone' => 'required|string|max:50',
-            'as' => 'required|string|in:national,state,support',
+            'as' => 'required|string|in:national,state,support,case',
             'state' => ['required', 'string', Rule::in(config('states'))],
         ];
     }

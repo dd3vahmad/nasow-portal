@@ -58,7 +58,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::middleware('role:support-staff')->group(function () {
             Route::get('/tickets/support', [TicketController::class, 'support']);
             Route::post('/tickets/close/{id}', [TicketController::class, 'close']);
-            Route::get('/members/support', [MembershipController::class, 'support']);
+        });
+
+        /** Case Manager Only Routes */
+        Route::middleware('role:case-manager')->group(function () {
+            Route::get('/members/cases', [MembershipController::class, 'cases']);
+            // Route::get('/members/cases/review', [MembershipController::class, 'review']);
         });
 
         /** State Admin Only Routes */

@@ -30,6 +30,7 @@ class RegisterController extends Controller
             $role = match ($validated['as']) {
                 'national' => RoleType::NationalAdmin->value,
                 'state' => RoleType::StateAdmin->value,
+                'case' => RoleType::CaseManager->value,
                 default => RoleType::SupportStaff->value,
             };
 
