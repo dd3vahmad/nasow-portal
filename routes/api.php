@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\ActionController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CpdController;
+use App\Http\Controllers\MessageController;
 use App\Http\Controllers\StatisticsController;
 use App\Http\Controllers\SupportStaffController;
 use App\Http\Controllers\TicketController;
@@ -97,6 +99,16 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::middleware('role:member|support-staff|state-admin|national-admin')->group( function () {
             Route::get('/tickets/{id}', [TicketController::class, 'view']);
             Route::get('/cpd/activities', [CpdController::class, 'current']);
+
+            Route::get('/chats', [ChatController::class, 'index']);
+            Route::post('/chats', [ChatController::class, 'store']);
+            Route::get('/chats/{chat}', [ChatController::class, 'show']);
+            Route::get('/chats/users/available', [ChatController::class, 'getAvailableUsers']);
+
+            Route::post('/chats/{chat}/messages', [MessageController::class, 'store']);
+            Route::post('/chats/{chat}/messages/read', [MessageController::class, 'markAsRead']);
+            Route::post('/chats/{chat}/typing', [MessageController::class, 'typing']);
+            Route::get('/messages/{message}/attachments/{index}', [MessageController::class, 'downloadAttachment']);
         });
     });
 });
