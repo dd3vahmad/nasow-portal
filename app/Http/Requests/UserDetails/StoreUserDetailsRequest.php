@@ -24,9 +24,6 @@ class StoreUserDetailsRequest extends BaseRequest {
     public function rules()
     {
         return [
-            'first_name' => 'required|string|max:50',
-            'last_name' => 'required|string|max:50',
-            'other_name' => 'nullable|string|max:50',
             'specialization' => 'nullable|string|max:50',
             'gender' => ['required', 'string', Rule::in(['MALE', 'FEMALE'])],
             'dob' => 'required|date_format:Y-m-d',

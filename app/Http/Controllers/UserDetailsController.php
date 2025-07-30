@@ -8,7 +8,6 @@ use App\Models\UserDetails;
 use App\Models\UserMemberships;
 use FFI\Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class UserDetailsController extends Controller
 {
@@ -24,10 +23,24 @@ class UserDetailsController extends Controller
             $user_id = $user->id ?? null;
             $detailsPayload = $request->validated();
 
+            $fullName = $user->name;
+            $nameParts = explode(' ', trim($fullName));
+
+            $firstName = $nameParts[0] ?? null;
+            $lastName = null;
+            $otherName = null;
+
+            if (count($nameParts) === 2) {
+                $lastName = $nameParts[1];
+            } elseif (count($nameParts) >= 3) {
+                $otherName = $nameParts[1];
+                $lastName = implode(' ', array_slice($nameParts, 2));
+            }
+
             $details = [
-                'first_name' => $detailsPayload['first_name'],
-                'last_name' => $detailsPayload['last_name'],
-                'other_name' => $detailsPayload['other_name'],
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'other_name' => $otherName,
                 'gender' => $detailsPayload['gender'],
                 'dob' => $detailsPayload['dob'],
                 'specialization' => $detailsPayload['specialization'],
