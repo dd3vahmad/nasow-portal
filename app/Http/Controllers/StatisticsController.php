@@ -26,7 +26,7 @@ class StatisticsController extends Controller
                 ->whereYear('created_at', Carbon::now()->year);
             $totalCpdHours = (float) $baseCpdLogQuery->sum('credit_hours');
             $totalCpdLogMembers = $baseCpdLogQuery->distinct()->count('member_id');
-            $avgCpdHours = $totalCpdHours / $totalCpdLogMembers;
+            $avgCpdHours = $totalCpdLogMembers ? $totalCpdHours / $totalCpdLogMembers : 0;
 
             $totalMembers = (clone $baseQuery)->count();
             $totalActiveMembers = (clone $baseQuery)
