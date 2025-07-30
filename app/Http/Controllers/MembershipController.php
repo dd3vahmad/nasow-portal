@@ -25,7 +25,7 @@ class MembershipController extends Controller {
             $status = $request->query('status');
             $search = $request->query('q');
 
-            $members = UserMemberships::whereHas('user', function ($q) use ($search) {
+            $members = UserMemberships::where('reviewed', true)->whereHas('user', function ($q) use ($search) {
                     $q->where('reg_status', 'done');
 
                     if ($search) {
@@ -46,7 +46,7 @@ class MembershipController extends Controller {
                 ->with(['user.details'])
                 ->get();
 
-            return ApiResponse::success('Members fetched successfully', MembersResource::collection($members));
+            return ApiResponse::success('Memberships fetched successfully', MembersResource::collection($members));
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
         }
@@ -68,7 +68,7 @@ class MembershipController extends Controller {
             $status = $request->query('status');
             $search = $request->query('q');
 
-            $members = UserMemberships::whereHas('user', function ($query) use ($search) {
+            $members = UserMemberships::where('reviewed', true)->whereHas('user', function ($query) use ($search) {
                     $query->where('reg_status', 'done');
 
                     if ($search) {
@@ -89,7 +89,7 @@ class MembershipController extends Controller {
                 ->with('user.details')
                 ->get();
 
-            return ApiResponse::success('Members fetched successfully', MembersResource::collection($members));
+            return ApiResponse::success('Memberships fetched successfully', MembersResource::collection($members));
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
         }
@@ -108,7 +108,7 @@ class MembershipController extends Controller {
                 throw new \Exception('Member not found');
             }
 
-            return ApiResponse::success('Member details fetched successfully', new MemberResource($member));
+            return ApiResponse::success('Membership details fetched successfully', new MemberResource($member));
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
         }
@@ -237,5 +237,47 @@ class MembershipController extends Controller {
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
         }
+    }
+
+    /**
+     * Get memberships for review by support staff
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return ApiResponse
+     */
+    public function support(Request $request) {
+        try {
+            $state = $request->query('state');
+            $status = $request->query('status');
+            $search = $request->query('q');
+
+            $memberships = UserMemberships::where('reviewed', false)->whereHas('user', function ($q) use ($search) {
+                    $q->where('reg_status', 'done');
+
+                    if ($search) {
+                        $q->where(function ($query) use ($search) {
+                            $query->where('name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%");
+                        });
+                    }
+                })
+                ->whereHas('user.details', function ($query) use ($state) {
+                    if ($state) {
+                        $query->where('state', $state);
+                    }
+                })
+                ->when($status, function ($query) use ($status) {
+                    $query->where('status', $status);
+                })
+                ->with(['user.details'])
+                ->get();
+            return ApiResponse::success('Memberships for review fetched successfully', $memberships);
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
+
+    public function review() {
+
     }
 }

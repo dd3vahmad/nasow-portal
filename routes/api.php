@@ -35,6 +35,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/me', [UserController::class, 'me']);
 
     Route::middleware(['verified'])->group(function () {
+        /** Public users only route */
         Route::middleware('role:guest')->group( function () {
             Route::post('/details', [UserDetailsController::class, 'store']);
             Route::post('/educations', [UserEducationsController::class, 'store']);
@@ -57,6 +58,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::middleware('role:support-staff')->group(function () {
             Route::get('/tickets/support', [TicketController::class, 'support']);
             Route::post('/tickets/close/{id}', [TicketController::class, 'close']);
+            Route::get('/members/support', [MembershipController::class, 'support']);
         });
 
         /** State Admin Only Routes */

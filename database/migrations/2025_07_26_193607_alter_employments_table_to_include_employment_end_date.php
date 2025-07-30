@@ -24,7 +24,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('user_employments', function (Blueprint $table) {
-            $table->date('year');
+            $table->date('year')->nullable();
             $table->dropColumn('end_date');
             $table->dropColumn('start_date');
         });
