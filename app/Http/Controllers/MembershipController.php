@@ -282,16 +282,19 @@ class MembershipController extends Controller {
         }
     }
 
-    public function review(Request $request, int $id) {
+    public function review(Request $request, int $id)
+    {
         try {
             $user = auth()->user();
 
-            $comment = $request->validate([
+            $validated = $request->validate([
                 'comment' => 'required|string|max:255'
             ]);
-            $membership = UserMemberships::find($id);
+
+            $membership = UserMemberships::findOrFail($id);
+
             $membership->update([
-                'comment' => $comment,
+                'comment' => isset($validated['comment']) ? $validated['comment'] : null,
                 'reviewed' => true,
                 'reviewed_by' => $user->id
             ]);
