@@ -236,10 +236,13 @@ class StatisticsController extends Controller
             $underReview = 0;
             $pendingApproval = 0;
             $approved = 0;
+            $suspended = 0;
 
             foreach ($memberships as $membership) {
                 if ($membership->status === 'verified') {
                     $approved++;
+                } elseif ($membership->status === 'suspended') {
+                    $suspended++;
                 } elseif ($membership->reviewed_by && !$membership->reviewed) {
                     $underReview++;
                 } elseif ($membership->reviewed && $membership->status !== 'verified') {
@@ -254,6 +257,7 @@ class StatisticsController extends Controller
                 'under-review' => $underReview,
                 'pending-approval' => $pendingApproval,
                 'approved' => $approved,
+                'suspended' => $suspended
             ]);
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
