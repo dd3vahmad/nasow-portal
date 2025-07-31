@@ -162,7 +162,9 @@ class MembershipController extends Controller {
                 ['guard_name' => 'api']
             );
 
-            $member->update(['no' => $membership_no]);
+            if (!$member->no) {
+                $member->update(['no' => $membership_no]);
+            }
             $member->assignRole($role);
             $member->sendMembershipApprovedNotification();
 
@@ -270,15 +272,14 @@ class MembershipController extends Controller {
      * @param \Illuminate\Http\Request $request
      * @return ApiResponse
      */
-    public function cases(Request $request) {
+    public function cases(Request $request)
+    {
         try {
             $state = $request->query('state');
             $status = $request->query('status');
             $search = $request->query('q');
 
-            $memberships = UserMemberships::where('reviewed', false)
-                ->where('status', '!=', 'verified')
-                ->whereHas('user', function ($q) use ($search) {
+            $memberships = UserMemberships::whereHas('user', function ($q) use ($search) {
                     $q->where('reg_status', 'done');
 
                     if ($search) {
@@ -297,8 +298,12 @@ class MembershipController extends Controller {
                     $query->where('status', $status);
                 })
                 ->with(['user.details'])
-                ->get();
-            return ApiResponse::success('Memberships for review fetched successfully', $memberships);
+                ->paginate(15);
+
+            return ApiResponse::success(
+                'Memberships for review fetched successfully',
+                MembersResource::collection($memberships)
+            );
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
         }
