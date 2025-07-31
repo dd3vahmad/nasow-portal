@@ -36,6 +36,12 @@ class User extends Authenticatable implements MustVerifyEmail
         'remember_token',
     ];
 
+    /** Check user online status */
+    public function isOnline(): bool
+    {
+        return cache()->has('user-is-online-' . $this->id);
+    }
+
     /** Relations */
     public function credentials()
     {

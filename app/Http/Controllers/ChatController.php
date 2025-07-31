@@ -28,6 +28,16 @@ class ChatController extends Controller
             ->get()
             ->map(function ($chat) use ($user) {
                 $chat->unread_count = $chat->unreadCount($user->id);
+
+                if ($chat->type === 'private') {
+                    $other = $chat->participants->firstWhere('id', '!=', $user->id);
+                    $chat->name = $other?->name;
+                    $chat->metadata = [
+                        'online' => $other?->isOnline(), // assuming isOnline() exists
+                        'role' => $other?->role,
+                    ];
+                }
+
                 return $chat;
             });
 
@@ -46,26 +56,41 @@ class ChatController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'nullable|string|max:255',
             'type' => 'required|in:private,group',
             'participants' => 'required|array|min:1',
             'participants.*' => 'exists:users,id',
         ]);
 
         $user = auth()->user();
+        $participants = $request->participants;
 
-        $this->validateChatCreationPermissions($user, $request->participants);
+        $this->validateChatCreationPermissions($user, $participants);
+
+        if ($request->type === 'private') {
+            $allParticipantIds = collect($participants)->push($user->id)->unique()->sort()->values()->toArray();
+
+            $existingChat = Chat::where('type', 'private')
+                ->whereHas('participants', fn($q) => $q->whereIn('user_id', $allParticipantIds))
+                ->withCount('participants')
+                ->get()
+                ->first(fn($chat) => $chat->participants->pluck('id')->sort()->values()->toArray() === $allParticipantIds);
+
+            if ($existingChat) {
+                return ApiResponse::success('Private chat already exists', $existingChat->load('participants'));
+            }
+        }
 
         DB::beginTransaction();
         try {
             $chat = Chat::create([
-                'name' => $request->name,
+                'name' => $request->type === 'group' ? $request->name : null,
                 'type' => $request->type,
                 'created_by' => $user->id,
             ]);
 
             $chat->participants()->attach($user->id, ['is_admin' => true]);
-            foreach ($request->participants as $participantId) {
+            foreach ($participants as $participantId) {
                 if ($participantId != $user->id) {
                     $chat->participants()->attach($participantId);
                 }
@@ -73,9 +98,9 @@ class ChatController extends Controller
 
             DB::commit();
 
-            return ApiResponse::success('Chats fetched successfully', $chat->load('participants'), 201);
+            return ApiResponse::success('Chat created successfully', $chat->load('participants'), 201);
         } catch (\Exception $e) {
-            DB::rollback();
+            DB::rollBack();
             return ApiResponse::error($e->getMessage(), 500);
         }
     }
@@ -97,17 +122,25 @@ class ChatController extends Controller
 
             case 'state-admin':
                 foreach ($participants as $participant) {
-                    if (!in_array($participant->role, ['member', 'support-staff']) ||
+                    if (!in_array($participant->role, ['member', 'support-staff', 'case-manager', 'state-admin']) ||
                         ($participant->role === 'member' && $participant->state !== $user->state)) {
                         abort(403, 'You can only chat with members from your state and support staff');
                     }
                 }
                 break;
 
+            case 'case-manager':
+                foreach ($participants as $participant) {
+                    if (!in_array($participant->role, ['member', 'support-staff', 'case-manager'])) {
+                        abort(403, 'Case managers can only chat with members, support staffs and fellow case managers');
+                    }
+                }
+                break;
+
             case 'support-staff':
                 foreach ($participants as $participant) {
-                    if ($participant->role !== 'member') {
-                        abort(403, 'Support staff can only chat with members');
+                    if (!in_array($participant->role, ['member', 'support-staff', 'case-manager'])) {
+                        abort(403, 'Case managers can only chat with members, case managers and fellow support staffs');
                     }
                 }
                 break;
@@ -132,7 +165,18 @@ class ChatController extends Controller
                 abort(403, 'You are not a participant in this chat');
             }
 
-            return ApiResponse::success('Chat details fetched', $chat->load(['participants', 'messages.user', 'messages.replyTo.user']));
+            $chat->load(['participants', 'messages.user', 'messages.replyTo.user']);
+
+            if ($chat->type === 'private') {
+                $other = $chat->participants->firstWhere('id', '!=', $user->id);
+                $chat->name = $other?->name;
+                $chat->metadata = [
+                    'online' => $other?->isOnline(),
+                    'role' => $other?->role,
+                ];
+            }
+
+            return ApiResponse::success('Chat details fetched', $chat);
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage(), 500);
         }
@@ -157,6 +201,12 @@ class ChatController extends Controller
                 case 'state-admin':
                     $query->where(function ($q) use ($user) {
                         $q->role('support-staff', 'api')
+                        ->orWhere(function ($subQ) {
+                            $subQ->role('state-admin', 'api');
+                        })
+                        ->orWhere(function ($subQ) {
+                            $subQ->role('case-manager', 'api');
+                        })
                         ->orWhere(function ($subQ) use ($user) {
                             $subQ->role('member', 'api')
                                 ->where('state', $user->state);
@@ -164,8 +214,28 @@ class ChatController extends Controller
                     });
                     break;
 
+                case 'case-manager':
+                    $query->where(function ($q) {
+                        $q->role('member', 'api')
+                        ->orWhere(function ($subQ) {
+                            $subQ->role('support-staff', 'api');
+                        })
+                        ->orWhere(function ($subQ) {
+                            $subQ->role('case-manager', 'api');
+                        });
+                    });
+                    break;
+
                 case 'support-staff':
-                    $query->role('member', 'api');
+                    $query->where(function ($q) {
+                        $q->role('member', 'api')
+                        ->orWhere(function ($subQ) {
+                            $subQ->role('support-staff', 'api');
+                        })
+                        ->orWhere(function ($subQ) {
+                            $subQ->role('case-manager', 'api');
+                        });
+                    });
                     break;
 
                 default:

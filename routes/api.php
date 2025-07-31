@@ -102,11 +102,14 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/cpd/activities/all', [CpdController::class, 'activities']);
         });
 
-        /** Private users route */
+        /** Some private users route */
         Route::middleware('role:member|support-staff|state-admin|national-admin')->group( function () {
             Route::get('/tickets/{id}', [TicketController::class, 'view']);
             Route::get('/cpd/activities', [CpdController::class, 'current']);
+        });
 
+        /** All private users route */
+        Route::middleware('role:member|support-staff|state-admin|national-admin|case-manager')->group( function () {
             Route::get('/chats', [ChatController::class, 'index']);
             Route::post('/chats', [ChatController::class, 'store']);
             Route::get('/chats/{chat}', [ChatController::class, 'show']);
