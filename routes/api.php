@@ -64,6 +64,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::middleware('role:case-manager')->group(function () {
             Route::get('/members/cases', [MembershipController::class, 'cases']);
             Route::post('/members/cases/review/{id}', [MembershipController::class, 'review']);
+            Route::post('/members/approval/request/{id}', [MembershipController::class, 'requestApproval']);
         });
 
         /** State Admin Only Routes */

@@ -140,8 +140,10 @@ class MembershipController extends Controller {
                 'suspended_at' => null
             ];
 
-            if (!$membership->reviewed && $membership->reviewed_by === null) {
+            if (!$membership->reviewed) {
                 $updateData['reviewed'] = true;
+            }
+            if ($membership->reviewed_by === null) {
                 $updateData['reviewed_by'] = $user->id;
             }
 
@@ -149,7 +151,12 @@ class MembershipController extends Controller {
 
             $member = User::find($membership->user_id);
             $generator = new MembershipNumberGenerator();
-            $membership_no = $generator->generate('NASOW');
+            $cat = match ($membership->category) {
+                'PROF'  => 'PSW',
+                'ASSOC' => 'ASW',
+                default => 'SSW',
+            };
+            $membership_no = $generator->generate($cat);
             $role = Role::firstOrCreate(
                 ['name' => 'member'],
                 ['guard_name' => 'api']
@@ -191,11 +198,12 @@ class MembershipController extends Controller {
                 'suspended_at' => now()
             ];
 
-            if (!$membership->reviewed && $membership->reviewed_by === null) {
+            if (!$membership->reviewed) {
                 $updateData['reviewed'] = true;
+            }
+            if ($membership->reviewed_by === null) {
                 $updateData['reviewed_by'] = $user->id;
             }
-
             $membership->update($updateData);
 
             $member->sendMembershipSuspendedNotification();
@@ -297,27 +305,53 @@ class MembershipController extends Controller {
     }
 
     /**
-     * Set membership as reviewed
+     * Set membership as reviewed by current user
+     *
+     * @param int $id
+     * @return ApiResponse
+     */
+    public function review(int $id)
+    {
+        try {
+            $user = auth()->user();
+
+            $membership = UserMemberships::findOrFail($id);
+            if (!$membership) {
+                return ApiResponse::error('Membership application not found');
+            }
+
+            if ($membership->reviewed_by) {
+                return ApiResponse::error('Membership application already under review');
+            }
+
+            $membership->update([
+                'reviewed_by' => $user->id
+            ]);
+
+            return ApiResponse::success('Membership marked successfully', $membership);
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
+
+    /**
+     * Set membership as reviewed as ask for approval
      *
      * @param \Illuminate\Http\Request $request
      * @param int $id
      * @return ApiResponse
      */
-    public function review(Request $request, int $id)
+    public function requestApproval(Request $request, int $id)
     {
         try {
-            $user = auth()->user();
-
             $validated = $request->validate([
                 'comment' => 'required|string|max:255'
             ]);
-
             $membership = UserMemberships::findOrFail($id);
 
             $membership->update([
-                'comment' => isset($validated['comment']) ? $validated['comment'] : null,
+                'comment' => $validated['comment'],
                 'reviewed' => true,
-                'reviewed_by' => $user->id
             ]);
 
             return ApiResponse::success('Membership reviewed successfully', $membership);
