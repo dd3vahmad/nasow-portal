@@ -226,4 +226,37 @@ class StatisticsController extends Controller
             return ApiResponse::error($th->getMessage());
         }
     }
+
+    public function review_stats()
+    {
+        try {
+            $memberships = UserMemberships::with('user')->get();
+
+            $pending = 0;
+            $underReview = 0;
+            $pendingApproval = 0;
+            $approved = 0;
+
+            foreach ($memberships as $membership) {
+                if ($membership->status === 'verified') {
+                    $approved++;
+                } elseif ($membership->reviewed_by && !$membership->reviewed) {
+                    $underReview++;
+                } elseif ($membership->reviewed && $membership->status !== 'verified') {
+                    $pendingApproval++;
+                } elseif ($membership->status === 'pending') {
+                    $pending++;
+                }
+            }
+
+            return ApiResponse::success('Review statistics fetched successfully', [
+                'pending' => $pending,
+                'under-review' => $underReview,
+                'pending-approval' => $pendingApproval,
+                'approved' => $approved,
+            ]);
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
 }
