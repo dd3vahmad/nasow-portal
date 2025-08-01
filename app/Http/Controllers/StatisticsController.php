@@ -237,6 +237,7 @@ class StatisticsController extends Controller
             $pendingApproval = 0;
             $approved = 0;
             $suspended = 0;
+            $completedToday = 0;
 
             foreach ($memberships as $membership) {
                 if ($membership->status === 'verified') {
@@ -249,6 +250,8 @@ class StatisticsController extends Controller
                     $pendingApproval++;
                 } elseif ($membership->status === 'pending') {
                     $pending++;
+                } elseif ($membership->approval_requested_at && $membership->approval_requested_at->isToday()) {
+                    $completedToday++;
                 }
             }
 
@@ -257,7 +260,8 @@ class StatisticsController extends Controller
                 'under-review' => $underReview,
                 'pending-approval' => $pendingApproval,
                 'approved' => $approved,
-                'suspended' => $suspended
+                'suspended' => $suspended,
+                'completed-today' => $completedToday
             ]);
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());

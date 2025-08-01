@@ -23,6 +23,17 @@ class UserMemberships extends Model {
         'comment'
     ];
 
+    /**
+     * Type casts
+     * @var array
+     */
+    protected $casts = [
+        'verified_at' => 'datetime',
+        'expires_at' => 'datetime',
+        'reviewed_at' => 'datetime',
+        'approval_requested_at' => 'datetime',
+    ];
+
     /* Relation */
     public function user()
     {
