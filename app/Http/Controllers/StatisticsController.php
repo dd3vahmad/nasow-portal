@@ -250,7 +250,9 @@ class StatisticsController extends Controller
                     $pendingApproval++;
                 } elseif ($membership->status === 'pending') {
                     $pending++;
-                } elseif ($membership->approval_requested_at && $membership->approval_requested_at->isToday()) {
+                }
+
+                if ($membership->approval_requested_at && $membership->approval_requested_at->isToday()) {
                     $completedToday++;
                 }
             }
