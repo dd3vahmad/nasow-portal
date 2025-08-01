@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Responses\ApiResponse;
 use App\Models\UserDetails;
+use App\Models\UserMemberships;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -23,12 +24,16 @@ class UserController extends Controller
             $user_id = $user->id ?? null;
 
             $details = UserDetails::where('user_id', $user_id)->first();
+            $firstMembership = UserMemberships::where('user_id', $user_id)
+                ->orderBy('created_at', 'asc')
+                ->first();
 
             $user_details = [
                 'id' => $user_id,
                 'name' => $user->name,
                 'email' => $user->email,
                 'role' => $role,
+                'status' => $firstMembership->status,
                 'last_login' => $user->last_login ?? null,
                 'reg_status' => $user->reg_status ?? null,
             ];

@@ -33,8 +33,14 @@ class UserTyping implements ShouldBroadcast
             'user' => [
                 'id' => $this->user->id,
                 'name' => $this->user->name,
+                'role' => $this->user->role,
             ],
             'is_typing' => $this->isTyping,
         ];
+    }
+
+    public function broadcastAs()
+    {
+        return 'user.typing';
     }
 }

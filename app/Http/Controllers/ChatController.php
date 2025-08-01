@@ -153,13 +153,14 @@ class ChatController extends Controller
     /**
      * Get chat details
      *
-     * @param \App\Models\Chat $chat
+     * @param int $chat
      * @return ApiResponse
      */
-    public function show(Chat $chat)
+    public function show(int $chatId)
     {
         try {
             $user = auth()->user();
+            $chat = Chat::find($chatId);
 
             if (!$chat->participants->contains($user->id)) {
                 abort(403, 'You are not a participant in this chat');
@@ -246,5 +247,55 @@ class ChatController extends Controller
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage(), 500);
         }
+    }
+
+    public function addParticipant(Request $request, int $chatId)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id'
+        ]);
+
+        $user = auth()->user();
+        $chat = Chat::find($chatId);
+        $participantToAdd = User::find($request->user_id);
+
+        $currentUserParticipant = $chat->participants()->where('user_id', $user->id)->first();
+        if (!$currentUserParticipant || !$currentUserParticipant->pivot->is_admin) {
+            return ApiResponse::error('Only chat admins can add participants', 403);
+        }
+
+        $this->validateChatCreationPermissions($user, [$participantToAdd->id]);
+
+        if ($chat->participants->contains($participantToAdd->id)) {
+            return ApiResponse::error('User is already a participant', 400);
+        }
+
+        $chat->participants()->attach($participantToAdd->id, [
+            'is_admin' => false,
+            'joined_at' => now()
+        ]);
+
+        return ApiResponse::success('Participant added successfully');
+    }
+
+    public function removeParticipant(int $chatId, int $participantId)
+    {
+        $user = auth()->user();
+
+        $chat = Chat::find($chatId);
+        $participant = User::find($participantId);
+        if ($user->id !== $participant->id) {
+            $currentUserParticipant = $chat->participants()->where('user_id', $user->id)->first();
+            if (!$currentUserParticipant || !$currentUserParticipant->pivot->is_admin) {
+                return ApiResponse::error('Only chat admins can remove other participants', 403);
+            }
+        }
+
+        if ($chat->created_by === $participant->id) {
+            return ApiResponse::error('Cannot remove the chat creator', 403);
+        }
+        $chat->participants()->detach($participant->id);
+
+        return ApiResponse::success('Participant removed successfully');
     }
 }

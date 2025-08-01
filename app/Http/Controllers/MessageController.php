@@ -16,11 +16,11 @@ class MessageController extends Controller
      * Sends a message
      *
      * @param \Illuminate\Http\Request $request
-     * @param \App\Models\Chat $chat
+     * @param int $chat
      * @throws \Exception
      * @return ApiResponse
      */
-    public function store(Request $request, Chat $chat)
+    public function store(Request $request, int $chatId)
     {
         $request->validate([
             'content' => 'required_without:attachments|string',
@@ -31,6 +31,7 @@ class MessageController extends Controller
         ]);
 
         $user = auth()->user();
+        $chat = Chat::find($chatId);
 
         if (!$chat->participants->contains($user->id)) {
             abort(403, 'You are not a participant in this chat');
@@ -94,7 +95,7 @@ class MessageController extends Controller
      * @param \App\Models\Chat $chat
      * @return ApiResponse
      */
-    public function markAsRead(Request $request, Chat $chat)
+    public function markAsRead(Request $request)
     {
         try {
             $user = auth()->user();
@@ -118,10 +119,10 @@ class MessageController extends Controller
      * Sets user typing state
      *
      * @param \Illuminate\Http\Request $request
-     * @param \App\Models\Chat $chat
+     * @param int $chatId
      * @return ApiResponse
      */
-    public function typing(Request $request, Chat $chat)
+    public function typing(Request $request, int $chatId)
     {
         $request->validate([
             'is_typing' => 'required|boolean',
@@ -129,6 +130,11 @@ class MessageController extends Controller
 
         try {
             $user = auth()->user();
+
+            $chat = Chat::find($chatId);
+            if (!$chat->participants->contains($user->id)) {
+                return ApiResponse::error('You are not a participant in this chat', 403);
+            }
 
             broadcast(new UserTyping($chat->id, $user, $request->is_typing))->toOthers();
 
