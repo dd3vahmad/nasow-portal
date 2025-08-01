@@ -356,4 +356,90 @@ class StatisticsController extends Controller
             return ApiResponse::error($th->getMessage());
         }
     }
+
+    /**
+     * Get case manager specific charts
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return ApiResponse
+     */
+    public function cases_dashcharts(Request $request) {
+        try {
+            $memberships = UserMemberships::get();
+
+            $pending = 0;
+            $underReview = 0;
+            $pendingApproval = 0;
+            $approved = 0;
+            $suspended = 0;
+
+            // Step 1: Determine start month
+            $start = $request->query('start');
+
+            if ($start && preg_match('/^\d{4}-\d{2}$/', $start)) {
+                $startDate = Carbon::createFromFormat('Y-m', $start)->startOfMonth();
+            } else {
+                $startDate = now()->copy()->subMonths(3)->startOfMonth(); // default: last 3 months + current
+            }
+
+            // Generate 4-month labels
+            $months = [];
+            for ($i = 0; $i < 4; $i++) {
+                $label = $startDate->copy()->addMonths($i)->format('M Y');
+                $key = $startDate->copy()->addMonths($i)->format('Y-m');
+                $months[$key] = [
+                    'label' => $label,
+                    'reviews' => 0,
+                    'approved' => 0,
+                ];
+            }
+
+            // Step 2: Status distribution + review stats
+            foreach ($memberships as $membership) {
+                // Distribution
+                switch ($membership->status) {
+                    case 'verified':
+                        $approved++;
+                        break;
+                    case 'suspended':
+                        $suspended++;
+                        break;
+                    case 'in-review':
+                        $underReview++;
+                        break;
+                    case 'pending-approval':
+                        $pendingApproval++;
+                        break;
+                    case 'pending':
+                        $pending++;
+                        break;
+                }
+
+                // Reviews by month
+                if ($membership->reviewed_at) {
+                    $reviewMonth = $membership->reviewed_at->format('Y-m');
+                    if (isset($months[$reviewMonth])) {
+                        $months[$reviewMonth]['reviews']++;
+                        if ($membership->status === 'verified') {
+                            $months[$reviewMonth]['approved']++;
+                        }
+                    }
+                }
+            }
+
+            return ApiResponse::success('Case manager dashboard charts fetched successfully', [
+                'review-progress-distribution' => [
+                    'pending' => $pending,
+                    'under-review' => $underReview,
+                    'pending-approval' => $pendingApproval,
+                    'approved' => $approved,
+                    'suspended' => $suspended,
+                ],
+                'monthly-review-trends' => array_values($months),
+                'range-start' => $startDate->format('Y-m')
+            ]);
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
 }
