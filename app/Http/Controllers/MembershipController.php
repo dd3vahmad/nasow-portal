@@ -330,7 +330,9 @@ class MembershipController extends Controller {
             }
 
             $membership->update([
-                'reviewed_by' => $user->id
+                'reviewed_by' => $user->id,
+                'status' => 'in-review',
+                'reviewed_at' => now()
             ]);
 
             return ApiResponse::success('Membership marked successfully', $membership);
@@ -357,6 +359,8 @@ class MembershipController extends Controller {
             $membership->update([
                 'comment' => $validated['comment'],
                 'reviewed' => true,
+                'status' => 'pending-approval',
+                'approval_requested_at' => now()
             ]);
 
             return ApiResponse::success('Membership reviewed successfully', $membership);

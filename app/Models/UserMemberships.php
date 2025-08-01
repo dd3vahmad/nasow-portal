@@ -10,7 +10,18 @@ use Illuminate\Database\Eloquent\Model;
 class UserMemberships extends Model {
     use HasFactory;
 
-    protected $fillable = ['category', 'status', 'verified_at', 'expires_at', 'user_id', 'reviewed', 'reviewed_by', 'comment'];
+    protected $fillable = [
+        'category',
+        'status',
+        'verified_at',
+        'expires_at',
+        'user_id',
+        'reviewed',
+        'reviewed_by',
+        'reviewed_at',
+        'approval_requested_at',
+        'comment'
+    ];
 
     /* Relation */
     public function user()

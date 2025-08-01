@@ -22,11 +22,7 @@ class MembersResource extends JsonResource
             'email' => $this->user->email ?? null,
             'phone' => $this->user->details->phone ?? null,
             'state' => $this->user->details->state ?? null,
-            'status' => ($this->reviewed_by && !$this->reviewed)
-                ? 'under-review'
-                : (($this->reviewed && ($this->status !== 'verified'))
-                ? 'pending-approval'
-                : $this->status),
+            'status' => $this->status ?? null,
             'category' => $this->category ?? null,
             'reviewed' => $this->reviewed ? true : false,
             'comment' => $this->comment ?? null,

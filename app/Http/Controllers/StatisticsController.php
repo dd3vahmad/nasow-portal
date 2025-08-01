@@ -243,9 +243,9 @@ class StatisticsController extends Controller
                     $approved++;
                 } elseif ($membership->status === 'suspended') {
                     $suspended++;
-                } elseif ($membership->reviewed_by && !$membership->reviewed) {
+                } elseif ($membership->status === 'in-review') {
                     $underReview++;
-                } elseif ($membership->reviewed && $membership->status !== 'verified') {
+                } elseif ($membership->status === 'pending-approval') {
                     $pendingApproval++;
                 } elseif ($membership->status === 'pending') {
                     $pending++;
