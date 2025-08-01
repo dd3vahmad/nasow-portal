@@ -145,6 +145,12 @@ class StatisticsController extends Controller
         }
     }
 
+    /**
+     * National stats and breakdown
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return ApiResponse
+     */
     public function national_breakdown(Request $request) {
         try {
             $from = $request->query('from') ? Carbon::parse($request->query('from'))->startOfDay() : Carbon::now()->startOfYear();
@@ -227,7 +233,13 @@ class StatisticsController extends Controller
         }
     }
 
-    public function review_stats()
+    /**
+     * Membership application review stats
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return ApiResponse
+     */
+    public function review_stats(Request $request)
     {
         try {
             $memberships = UserMemberships::with('user')->get();
@@ -237,7 +249,6 @@ class StatisticsController extends Controller
             $pendingApproval = 0;
             $approved = 0;
             $suspended = 0;
-            $completedToday = 0;
 
             foreach ($memberships as $membership) {
                 if ($membership->status === 'verified') {
@@ -251,10 +262,6 @@ class StatisticsController extends Controller
                 } elseif ($membership->status === 'pending') {
                     $pending++;
                 }
-
-                if ($membership->approval_requested_at && $membership->approval_requested_at->isToday()) {
-                    $completedToday++;
-                }
             }
 
             return ApiResponse::success('Review statistics fetched successfully', [
@@ -263,7 +270,87 @@ class StatisticsController extends Controller
                 'pending-approval' => $pendingApproval,
                 'approved' => $approved,
                 'suspended' => $suspended,
-                'completed-today' => $completedToday
+            ]);
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
+
+
+    /**
+     * Get case manager specific stats
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return ApiResponse
+     */
+    public function cases_dashstats(Request $request) {
+        try {
+            $userId = auth()->id();
+
+            $memberships = UserMemberships::where('reviewed_by', $userId)->get();
+            $pending = UserMemberships::where('status', 'pending')->count();
+
+            $underReview = 0;
+            $pendingApproval = 0;
+            $approved = 0;
+            $suspended = 0;
+            $completedToday = 0;
+
+            $totalReviewTime = 0;
+            $reviewCount = 0;
+
+            foreach ($memberships as $membership) {
+                switch ($membership->status) {
+                    case 'verified':
+                        $approved++;
+                        break;
+                    case 'suspended':
+                        $suspended++;
+                        break;
+                    case 'in-review':
+                        $underReview++;
+                        break;
+                    case 'pending-approval':
+                        $pendingApproval++;
+                        break;
+                }
+
+                if ($membership->approval_requested_at && $membership->approval_requested_at->isToday()) {
+                    $completedToday++;
+                }
+
+                if (
+                    $membership->approval_requested_at &&
+                    $membership->reviewed_at
+                ) {
+                    $diffInMinutes = $membership->reviewed_at->diffInMinutes($membership->approval_requested_at);
+                    $totalReviewTime += $diffInMinutes;
+                    $reviewCount++;
+                }
+            }
+
+            // Format average review time
+            if ($reviewCount > 0) {
+                $avgMinutes = round($totalReviewTime / $reviewCount);
+                $hours = intdiv($avgMinutes, 60);
+                $minutes = $avgMinutes % 60;
+
+                $avgReviewTime = trim(
+                    ($hours > 0 ? $hours . ' hour' . ($hours > 1 ? 's' : '') : '') . ' ' .
+                    ($minutes > 0 ? $minutes . ' minute' . ($minutes > 1 ? 's' : '') : '')
+                );
+            } else {
+                $avgReviewTime = '0 minutes';
+            }
+
+            return ApiResponse::success('Case manager dashboard statistics fetched successfully', [
+                'pending' => $pending,
+                'under-review' => $underReview,
+                'pending-approval' => $pendingApproval,
+                'approved' => $approved,
+                'suspended' => $suspended,
+                'completed-today' => $completedToday,
+                'avg-review-time' => $avgReviewTime
             ]);
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
