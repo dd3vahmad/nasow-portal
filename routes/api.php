@@ -118,7 +118,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::delete('/chats/{chatId}/participants/{participantId}', [ChatController::class, 'removeParticipant']);
         });
 
-        /** All authenticated users route */
+        /** All private users route */
         Route::get('/chats', [ChatController::class, 'index']);
         Route::get('/chats/{chatId}', [ChatController::class, 'show']);
 

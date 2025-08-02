@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Chats\StoreChatRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\Chat;
 use App\Models\User;
@@ -50,24 +51,21 @@ class ChatController extends Controller
     /**
      * Start a new chat
      *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @param  StoreChatRequest $request
+     * @return ApiResponse
      */
-    public function store(Request $request)
+    public function store(StoreChatRequest $request)
     {
-        $request->validate([
-            'name' => 'nullable|string|max:255',
-            'type' => 'required|in:private,group',
-            'participants' => 'required|array|min:1',
-            'participants.*' => 'exists:users,id',
-        ]);
-
         $user = auth()->user();
-        $participants = $request->participants;
+        $data = $request->validated();
+        $participants = collect($data['participants'])
+            ->filter(fn ($id) => $id != $user->id)
+            ->values()
+            ->all();
 
         $this->validateChatCreationPermissions($user, $participants);
 
-        if ($request->type === 'private') {
+        if ($data['type'] === 'private') {
             $allParticipantIds = collect($participants)->push($user->id)->unique()->sort()->values()->toArray();
 
             $existingChat = Chat::where('type', 'private')
@@ -84,16 +82,17 @@ class ChatController extends Controller
         DB::beginTransaction();
         try {
             $chat = Chat::create([
-                'name' => $request->type === 'group' ? $request->name : null,
-                'type' => $request->type,
+                'name' => $data['type'] === 'group' ? $data['name'] : null,
+                'type' => $data['type'],
                 'created_by' => $user->id,
             ]);
 
+            // Attach the creator as admin
             $chat->participants()->attach($user->id, ['is_admin' => true]);
+
+            // Attach other participants
             foreach ($participants as $participantId) {
-                if ($participantId != $user->id) {
-                    $chat->participants()->attach($participantId);
-                }
+                $chat->participants()->attach($participantId);
             }
 
             DB::commit();
@@ -116,7 +115,7 @@ class ChatController extends Controller
     {
         $participants = User::whereIn('id', $participantIds)->get();
 
-        switch ($user->role) {
+        switch ($user->getRoleNames()->first()) {
             case 'national-admin':
                 break;
 
