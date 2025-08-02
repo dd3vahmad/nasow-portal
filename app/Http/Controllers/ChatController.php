@@ -274,6 +274,9 @@ class ChatController extends Controller
 
         $user = auth()->user();
         $chat = Chat::findOrFail($chatId);
+        if ($chat->type === 'private') {
+            return ApiResponse::error('You cannot add a new participant to a private chat');
+        }
         $participantToAdd = User::findOrFail($request->user_id);
 
         $currentUserParticipant = $chat->participants()->where('user_id', $user->id)->first();
