@@ -160,7 +160,7 @@ class ChatController extends Controller
     {
         try {
             $user = auth()->user();
-            $chat = Chat::find($chatId);
+            $chat = Chat::findOrFail($chatId);
 
             if (!$chat->participants->contains($user->id)) {
                 abort(403, 'You are not a participant in this chat');
@@ -256,8 +256,8 @@ class ChatController extends Controller
         ]);
 
         $user = auth()->user();
-        $chat = Chat::find($chatId);
-        $participantToAdd = User::find($request->user_id);
+        $chat = Chat::findOrFail($chatId);
+        $participantToAdd = User::findOrFail($request->user_id);
 
         $currentUserParticipant = $chat->participants()->where('user_id', $user->id)->first();
         if (!$currentUserParticipant || !$currentUserParticipant->pivot->is_admin) {
@@ -282,8 +282,9 @@ class ChatController extends Controller
     {
         $user = auth()->user();
 
-        $chat = Chat::find($chatId);
-        $participant = User::find($participantId);
+        $chat = Chat::findOrFail($chatId);
+        $participant = User::findOrFail($participantId);
+
         if ($user->id !== $participant->id) {
             $currentUserParticipant = $chat->participants()->where('user_id', $user->id)->first();
             if (!$currentUserParticipant || !$currentUserParticipant->pivot->is_admin) {
