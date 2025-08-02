@@ -57,7 +57,9 @@ return [
     ],
 
     'aliases' => [
-        'Cloudinary' => CloudinaryLabs\CloudinaryLaravel\CloudinaryServiceProvider::class
+        'Cloudinary' => CloudinaryLabs\CloudinaryLaravel\CloudinaryServiceProvider::class,
+         'Route' => Illuminate\Support\Facades\Route::class,
+
     ],
 
     /*
