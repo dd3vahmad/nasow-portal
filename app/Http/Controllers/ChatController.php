@@ -240,7 +240,12 @@ class ChatController extends Controller
                     break;
 
                 default:
-                    return ApiResponse::success('Available users fetched successfully', []);
+                    return ApiResponse::success('Available users fetched successfully', $query->get()->map(function ($u) {
+                        $u['role'] = $u->getRoleNames()->first();
+                        $u->makeHidden('roles');
+
+                        return $u;
+                    }));
             }
 
             return ApiResponse::success('Available users fetched successfully', $query->select('id', 'name', 'email', 'state')->get());

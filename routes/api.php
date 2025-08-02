@@ -111,22 +111,21 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/tickets/{id}', [TicketController::class, 'view']);
             Route::get('/cpd/activities', [CpdController::class, 'current']);
         });
-
-        /** All private users route */
-        Route::middleware('role:member|support-staff|state-admin|national-admin|case-manager')->group( function () {
-            Route::get('/chats', [ChatController::class, 'index']);
+        Route::middleware('role:case-manager|support-staff|state-admin|national-admin')->group( function () {
             Route::post('/chats', [ChatController::class, 'store']);
-            Route::get('/chats/{chatId}', [ChatController::class, 'show']);
             Route::get('/chats/users/available', [ChatController::class, 'getAvailableUsers']);
-
             Route::post('/chats/{chatId}/participants', [ChatController::class, 'addParticipant']);
             Route::delete('/chats/{chatId}/participants/{participantId}', [ChatController::class, 'removeParticipant']);
-
-            Route::post('/chats/{chatId}/messages', [MessageController::class, 'store']);
-            Route::post('/chats/messages/read', [MessageController::class, 'markAsRead']);
-            Route::post('/chats/{chatId}/typing', [MessageController::class, 'typing']);
-            Route::get('/messages/{messageId}/attachments/{index}', [MessageController::class, 'downloadAttachment']);
         });
+
+        /** All authenticated users route */
+        Route::get('/chats', [ChatController::class, 'index']);
+        Route::get('/chats/{chatId}', [ChatController::class, 'show']);
+
+        Route::post('/chats/{chatId}/messages', [MessageController::class, 'store']);
+        Route::post('/chats/messages/read', [MessageController::class, 'markAsRead']);
+        Route::post('/chats/{chatId}/typing', [MessageController::class, 'typing']);
+        Route::get('/messages/{messageId}/attachments/{index}', [MessageController::class, 'downloadAttachment']);
     });
 });
 
