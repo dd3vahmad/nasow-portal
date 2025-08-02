@@ -24,7 +24,7 @@ Broadcast::channel('chat.{chatId}', function ($user, $chatId) {
     return [
         'id' => $user->id,
         'name' => $user->name,
-        'role' => $user->role,
-        'state' => $user->state ?? null,
+        'role' => $user->getRoleNames()->first(),
+        'state' => $user->details->state ?? null,
     ];
 });

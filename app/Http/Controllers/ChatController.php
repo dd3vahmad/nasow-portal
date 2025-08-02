@@ -194,7 +194,7 @@ class ChatController extends Controller
             $user = auth()->user();
             $query = User::where('id', '!=', $user->id);
 
-            switch ($user->role) {
+            switch ($user->getRoleNames()->first()) {
                 case 'national-admin':
                     break;
 
@@ -222,6 +222,9 @@ class ChatController extends Controller
                         })
                         ->orWhere(function ($subQ) {
                             $subQ->role('case-manager', 'api');
+                        })
+                        ->orWhere(function ($subQ) {
+                            $subQ->role('guest', 'api');
                         });
                     });
                     break;
@@ -234,20 +237,30 @@ class ChatController extends Controller
                         })
                         ->orWhere(function ($subQ) {
                             $subQ->role('case-manager', 'api');
+                        })
+                        ->orWhere(function ($subQ) {
+                            $subQ->role('guest', 'api');
                         });
                     });
                     break;
 
                 default:
-                    return ApiResponse::success('Available users fetched successfully', $query->get()->map(function ($u) {
-                        $u['role'] = $u->getRoleNames()->first();
-                        $u->makeHidden('roles');
-
-                        return $u;
-                    }));
+                    return ApiResponse::success('Available users fetched successfully', []);
             }
 
-            return ApiResponse::success('Available users fetched successfully', $query->select('id', 'name', 'email', 'state')->get());
+            return ApiResponse::success(
+                'Available users fetched successfully',
+                $query
+                        ->select('id', 'name', 'email')->with('details')
+                        ->get()
+                        ->map(function ($u) {
+                            $u['role'] = $u->getRoleNames()->first();
+                            $u->makeHidden('roles');
+
+                            return $u;
+                        }
+                    )
+                );
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage(), 500);
         }
