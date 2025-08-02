@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 
 use App\Events\MessageSent;
 use App\Events\UserTyping;
+use App\Http\Requests\Chats\StoreMessageRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\Chat;
 use App\Models\Message;
@@ -15,31 +16,26 @@ class MessageController extends Controller
     /**
      * Sends a message
      *
-     * @param \Illuminate\Http\Request $request
+     * @param StoreMessageRequest $request
      * @param int $chat
      * @throws \Exception
      * @return ApiResponse
      */
-    public function store(Request $request, int $chatId)
+    public function store(StoreMessageRequest $request, int $chatId)
     {
-        $request->validate([
-            'content' => 'required_without:attachments|string',
-            'type' => 'in:text,file,image',
-            'reply_to' => 'nullable|exists:messages,id',
-            'attachments' => 'nullable|array',
-            'attachments.*' => 'file|max:10240',
-        ]);
-
+        $data = $request->validated();
         $user = auth()->user();
-        $chat = Chat::find($chatId);
+
+        $chat = Chat::findOrFail($chatId);
 
         if (!$chat->participants->contains($user->id)) {
-            abort(403, 'You are not a participant in this chat');
+            return ApiResponse::error('You are not a participant in this chat', 403);
         }
 
         $attachments = [];
-        if ($request->hasFile('attachments')) {
-            foreach ($request->file('attachments') as $index => $file) {
+
+        if (!empty($data['attachments'])) {
+            foreach ($data['attachments'] as $index => $file) {
                 try {
                     if (!$file || !$file instanceof \Illuminate\Http\UploadedFile || !$file->isValid()) {
                         throw new \Exception('Invalid or missing file at index ' . $index . ': ' . ($file ? $file->getClientOriginalName() : 'No file'));
@@ -72,9 +68,9 @@ class MessageController extends Controller
         $message = Message::create([
             'chat_id' => $chat->id,
             'user_id' => $user->id,
-            'content' => $request->input('content'),
-            'type' => $request->input('type', 'text'),
-            'reply_to' => $request->input('reply_to'),
+            'content' => $data['content'] ?? null,
+            'type' => $data['type'] ?? 'text',
+            'reply_to' => $data['reply_to'] ?? null,
             'attachments' => $attachments,
         ]);
 
