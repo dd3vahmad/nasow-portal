@@ -32,8 +32,7 @@ class LoginController extends Controller {
                 return ApiResponse::error('User with this email does not exist.', 404);
             }
 
-            $emailVerified = isset($user->email_verified_at);
-            if (!$emailVerified) {
+            if (!$user->hasVerifiedEmail()) {
                 $user->sendEmailVerificationNotification();
                 return ApiResponse::error('Verify your email before continuing. Check your mail for details', 401);
             }

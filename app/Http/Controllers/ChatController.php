@@ -165,7 +165,12 @@ class ChatController extends Controller
                 abort(403, 'You are not a participant in this chat');
             }
 
-            $chat->load(['participants', 'messages.user', 'messages.replyTo.user']);
+            $chat->load(['participants', 'messages.user', 'messages.replyTo.user', 'messages.reads']);
+
+            // Add read status to each message
+            $chat->messages->each(function ($message) use ($user) {
+                $message->read = $message->reads->contains('user_id', $user->id);
+            });
 
             if ($chat->type === 'private') {
                 $other = $chat->participants->firstWhere('id', '!=', $user->id);

@@ -33,7 +33,7 @@ class UserController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'role' => $role,
-                'status' => $firstMembership->status,
+                'status' => $firstMembership?->status ?? null,
                 'last_login' => $user->last_login ?? null,
                 'reg_status' => $user->reg_status ?? null,
             ];

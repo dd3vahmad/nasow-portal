@@ -63,6 +63,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         /** Case Manager Only Routes */
         Route::middleware('role:case-manager')->group(function () {
             Route::get('/members/cases', [MembershipController::class, 'cases']);
+            Route::get('/members/cases/{id}', [MembershipController::class, 'viewCase']);
             Route::post('/members/cases/review/{id}', [MembershipController::class, 'review']);
             Route::post('/members/approval/request/{id}', [MembershipController::class, 'requestApproval']);
             Route::get('/members/review/stats', [StatisticsController::class, 'review_stats']);
@@ -81,8 +82,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::middleware('role:national-admin')->group( function () {
             Route::get('/cpd/logs', [CpdController::class, 'index']);
             Route::post('/register/admin', [RegisterController::class, 'registerAdmin']);
-            Route::put('/members/approve/{id}', [MembershipController::class, 'approve']);
-            Route::put('/members/suspend/{id}', [MembershipController::class, 'suspend']);
             Route::get('/members', [MembershipController::class, 'index']);
             Route::get('/supports', [SupportStaffController::class, 'index']);
             Route::get('/tickets', [TicketController::class, 'index']);
@@ -100,6 +99,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/members/state', [MembershipController::class, 'state']);
             Route::get('/members/{id}', [MembershipController::class, 'view']);
             Route::delete('/members/{id}', [MembershipController::class, 'delete']);
+            Route::put('/members/approve/{id}', [MembershipController::class, 'approve']);
+            Route::put('/members/suspend/{id}', [MembershipController::class, 'suspend']);
             Route::post('/tickets/assign', [TicketController::class, 'assign']);
             Route::post('/cpd/logs/approve/{id}', [CpdController::class, 'approve']);
             Route::post('/cpd/logs/reject/{id}', [CpdController::class, 'reject']);

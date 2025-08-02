@@ -115,6 +115,25 @@ class MembershipController extends Controller {
     }
 
     /**
+     * View case details for case manager
+     *
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function viewCase(int $id) {
+        try {
+            $member = UserMemberships::where('id', $id)->with('user.details')->first();
+            if (!$member) {
+                throw new \Exception('Member case not found');
+            }
+
+            return ApiResponse::success('Case details fetched successfully', new MemberResource($member));
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
+
+    /**
      * Approve membership
      *
      * @param int $id
