@@ -75,6 +75,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Frontend URL
+    |--------------------------------------------------------------------------
+    |
+    | This URL is used to redirect users to the frontend application
+    | after certain actions like email verification.
+    |
+    */
+
+    'frontend_url' => env('FRONTEND_URL', 'https://nasow-portal.vercel.app'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

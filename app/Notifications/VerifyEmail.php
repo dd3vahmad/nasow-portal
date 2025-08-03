@@ -36,6 +36,9 @@ class VerifyEmail extends Notification
      */
     protected function verificationUrl($notifiable)
     {
+        $frontendUrl = config('app.frontend_url', 'https://nasow-portal.vercel.app');
+        
+        // Create a signed URL for the API endpoint that will redirect to frontend
         $temporarySignedURL = URL::temporarySignedRoute(
             'verification.verify',
             Carbon::now()->addMinutes(60),

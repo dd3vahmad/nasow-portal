@@ -14,11 +14,15 @@ class EmailVerificationController extends Controller
         $user = User::findOrFail($id);
 
         if (! hash_equals((string) $hash, sha1($user->email))) {
-            abort(403, 'Invalid verification link.');
+            // Redirect to frontend with error
+            $frontendUrl = config('app.frontend_url', 'https://nasow-portal.vercel.app');
+            return redirect($frontendUrl . '/email/verify?id=' . $id . '&hash=' . $hash . '&error=invalid');
         }
 
         if ($user->hasVerifiedEmail()) {
-            return ApiResponse::success('Email already verified.');
+            // Redirect to frontend with already verified status
+            $frontendUrl = config('app.frontend_url', 'https://nasow-portal.vercel.app');
+            return redirect($frontendUrl . '/email/verify?id=' . $id . '&hash=' . $hash . '&status=already-verified');
         }
 
         // Mark email as verified in UserCredential
@@ -27,6 +31,8 @@ class EmailVerificationController extends Controller
         // Update user registration status
         $user->update(['reg_status' => 'personal-info']);
 
-        return ApiResponse::success('Email verified successfully.');
+        // Redirect to frontend with success
+        $frontendUrl = config('app.frontend_url', 'https://nasow-portal.vercel.app');
+        return redirect($frontendUrl . '/email/verify?id=' . $id . '&hash=' . $hash . '&status=success');
     }
 }
