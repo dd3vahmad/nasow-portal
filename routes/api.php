@@ -60,6 +60,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/tickets/close/{id}', [TicketController::class, 'close']);
         });
 
+        /** Support Staff & Member Only Routes */
+        Route::middleware('role:support-staff|member')->group(function () {
+            Route::post('/tickets/message', [TicketController::class, 'sendMessage']);
+        });
+
         /** Case Manager Only Routes */
         Route::middleware('role:case-manager')->group(function () {
             Route::get('/members/cases', [MembershipController::class, 'cases']);

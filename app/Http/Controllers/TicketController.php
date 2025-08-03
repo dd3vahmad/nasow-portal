@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\ActivityType;
+use App\Http\Requests\Ticket\StoreTicketMessageRequest;
 use App\Http\Requests\Ticket\AssignTicketRequest;
 use App\Http\Requests\Ticket\CreateTicketRequest;
 use App\Http\Resources\TicketResource;
@@ -251,6 +252,28 @@ class TicketController extends Controller
             ActionLogger::audit("{$user->name} closed a ticket: {$subject}", $user->id ?? null);
 
             return ApiResponse::success('Ticket closed', new TicketResource($ticket));
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
+
+    /**
+     * Send a new ticket message
+     *
+     * @param \App\Http\Requests\Ticket\StoreTicketMessageRequest $request
+     * @return ApiResponse
+     */
+    public function sendMessage(StoreTicketMessageRequest $request) {
+        try {
+            $validated = $request->validated();
+
+            $message = TicketMessage::create([
+                'sender_id' => auth()->id(),
+                'ticket_id' => $validated['ticket_id'],
+                'message'   => $validated['message'],
+            ]);
+
+            return ApiResponse::success('Ticket message created successfully.', $message, 201);
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
         }
