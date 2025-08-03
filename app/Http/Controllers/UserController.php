@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Responses\ApiResponse;
+use App\Models\UserCredential;
 use App\Models\UserDetails;
 use App\Models\UserMemberships;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -53,6 +55,84 @@ class UserController extends Controller
             }
 
             return ApiResponse::success('User details fetched successfully', $user_details);
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
+
+    /**
+     * Updates user details
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return ApiResponse
+     */
+    public function update(Request $request) {
+        try {
+            $validated = $request->validate([
+                'first_name' => 'required|string|min:3',
+                'last_name' => 'required|string|min:3',
+                'other_name' => 'nullable|string|min:3',
+                'gender' => 'required|string|in:MALE,FEMALE',
+                'dob' => 'required|date',
+                'address' => 'required|string',
+                'specialization' => 'nullable|string',
+                'state' => 'nullable|string',
+                'phone' => 'required|string',
+            ]);
+
+            $user = Auth::user();
+            $fullName = $validated['first_name'] . ' ' . $validated['last_name'];
+            if (!empty($validated['other_name'])) {
+                $fullName .= ' ' . $validated['other_name'];
+            }
+
+            $user->name = $fullName;
+            $user->save();
+
+            $user_details = UserDetails::updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'first_name' => $validated['first_name'],
+                    'last_name' => $validated['last_name'],
+                    'other_name' => $validated['other_name'],
+                    'gender' => $validated['gender'],
+                    'dob' => $validated['dob'],
+                    'address' => $validated['address'],
+                    'specialization' => $validated['specialization'] ?? null,
+                    'state' => $validated['state'] ?? null,
+                    'phone' => $validated['phone'],
+                ]
+            );
+
+            return ApiResponse::success('User details updated successfully', $user_details);
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
+
+    /**
+     * Changes the user password
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return ApiResponse
+     */
+    public function changePassword(Request $request) {
+        try {
+            $user = auth()->user();
+
+            $validated = $request->validate([
+                'password' => 'required|string|min:6',
+            ]);
+
+            $cred = UserCredential::where('user_id', $user->id)->first();
+            if (Hash::check($validated['password'], $cred->password)) {
+                return ApiResponse::error('New password must be different from the old password', 400);
+            }
+
+            $cred->password = $validated['password'];
+            $cred->save();
+
+            return ApiResponse::success('Password changed successfully');
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
         }

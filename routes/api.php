@@ -133,6 +133,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/chats/messages/read', [MessageController::class, 'markAsRead']);
         Route::post('/chats/{chatId}/typing', [MessageController::class, 'typing']);
         Route::get('/messages/{messageId}/attachments/{index}', [MessageController::class, 'downloadAttachment']);
+
+        Route::put('/settings/security', [UserController::class, 'changePassword']);
+        Route::put('/me', [UserController::class, 'update']);
     });
 });
 
