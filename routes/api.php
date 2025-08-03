@@ -116,6 +116,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::middleware('role:member|support-staff|state-admin|national-admin')->group( function () {
             Route::get('/tickets/{id}', [TicketController::class, 'view']);
             Route::get('/cpd/activities', [CpdController::class, 'current']);
+            Route::get('/cpd/activities/recent', [CpdController::class, 'recent']);
         });
         Route::middleware('role:case-manager|support-staff|state-admin|national-admin')->group( function () {
             Route::post('/chats', [ChatController::class, 'store']);

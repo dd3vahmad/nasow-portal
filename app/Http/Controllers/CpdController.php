@@ -222,6 +222,34 @@ class CPDController extends Controller
     }
 
     /**
+     * Get the year's recent CPD activities
+     *
+     * @param Request $request
+     * @return ApiResponse
+     */
+    public function recent(Request $request) {
+        try {
+            $q = $request->query('q', '');
+            $type = $request->query('type', '');
+            $limit = $request->query('limit', 5);
+
+            $logs = CpdActivity::whereYear('created_at', Carbon::now()->year)->when($type, function ($query) use ($type) {
+                    $query->where('type', $type);
+                })
+                ->when($q, function ($query) use ($q) {
+                    $query->where('title', 'like', "%$q%")->orWhere('description', 'like', "%$q%");
+                })
+                ->orderBy('created_at', 'desc')
+                ->limit($limit)
+                ->get();
+
+            return ApiResponse::success('Activities fetched successfully', CpdActivityResource::collection($logs));
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
+
+    /**
      * Get all CPD activities
      *
      * @param Request $request
