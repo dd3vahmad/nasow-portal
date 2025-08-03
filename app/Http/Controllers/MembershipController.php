@@ -7,9 +7,11 @@ use App\Http\Resources\MemberResource;
 use App\Http\Resources\MembersResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\User;
+use App\Models\UserDocument;
 use App\Models\UserMemberships;
 use App\Services\MembershipNumberGenerator;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
 
 class MembershipController extends Controller {
@@ -383,6 +385,43 @@ class MembershipController extends Controller {
             ]);
 
             return ApiResponse::success('Membership reviewed successfully', $membership);
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
+
+    /**
+     * Get current user membership
+     *
+     * @return ApiResponse
+     */
+    public function membership() {
+        try {
+            $user = Auth::user();
+            $currentMembership = UserMemberships::where('user_id', $user->id)
+                ->latest('created_at')
+                ->select(['id', 'category', 'status', 'expires_at', 'created_at'])
+                ->first();
+
+            return APiResponse::success('User membership fetched successfully', $currentMembership);
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
+
+    /**
+     * Get current membership documents
+     *
+     * @return ApiResponse
+     */
+    public function documents() {
+        try {
+            $user = Auth::user();
+            $documents = UserDocument::where('user_id', $user->id)
+                ->select(['id', 'name', 'resource_url', 'created_at'])
+                ->get();
+
+            return ApiResponse::success('Membership documents fetched successfully', $documents);
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
         }

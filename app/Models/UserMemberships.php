@@ -23,6 +23,8 @@ class UserMemberships extends Model {
         'comment'
     ];
 
+    protected $appends = ['is_active'];
+
     /**
      * Type casts
      * @var array
@@ -60,6 +62,16 @@ class UserMemberships extends Model {
     public function scopeActive(Builder $query)
     {
         return $query->where('expires_at', '>', Carbon::now());
+    }
+
+    /**
+     * (is_active) Accessor setter
+     *
+     * @return bool
+     */
+    public function getIsActiveAttribute(): bool
+    {
+        return $this->isActive();
     }
 
     /**
