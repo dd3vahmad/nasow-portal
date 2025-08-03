@@ -189,8 +189,8 @@ class StatisticsController extends Controller
                 ->with('member:id,name')
                 ->get()
                 ->map(fn($log) => [
-                    'member_name' => optional($log->member)->name ?? 'Unknown',
-                    'total_hours' => (float) $log->total_hours,
+                    'name' => optional($log->member)->name ?? 'Unknown',
+                    'hours' => (float) $log->total_hours,
                 ]);
 
             // Payment trends (count by month)
