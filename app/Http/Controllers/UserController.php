@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Responses\ApiResponse;
+use App\Models\User;
 use App\Models\UserCredential;
 use App\Models\UserDetails;
 use App\Models\UserMemberships;
@@ -133,6 +134,25 @@ class UserController extends Controller
             $cred->save();
 
             return ApiResponse::success('Password changed successfully');
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
+
+    /**
+     * Get authenticated user details
+     *
+     * @return ApiResponse
+     */
+    public function details() {
+        try {
+            $user = User::with(['details', 'memberships'])->find(auth()->id());
+
+            if (!$user) {
+                return ApiResponse::error('User not found');
+            }
+
+            return ApiResponse::success('User details fetched successfully', $user);
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
         }

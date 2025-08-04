@@ -26,6 +26,12 @@ class SettingsController extends Controller
         }
     }
 
+    /**
+     * Change user settings
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return ApiResponse
+     */
     public function change(Request $request)
     {
         try {

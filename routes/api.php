@@ -140,6 +140,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         Route::put('/settings/security', [UserController::class, 'changePassword']);
         Route::put('/me', [UserController::class, 'update']);
+        Route::get('/me/details', [UserController::class, 'details']);
 
         Route::get('/settings', [SettingsController::class, 'settings']);
         Route::put('/settings', [SettingsController::class, 'change']);
