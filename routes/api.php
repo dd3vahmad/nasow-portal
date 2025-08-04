@@ -142,6 +142,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::put('/me', [UserController::class, 'update']);
 
         Route::get('/settings', [SettingsController::class, 'settings']);
+        Route::put('/settings', [SettingsController::class, 'change']);
     });
 });
 
