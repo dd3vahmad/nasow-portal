@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('settings', function (Blueprint $table) {
             $table->id();
-            $table->boolean('2fa')->default(false);
+            $table->boolean('two_factor_enabled')->default(false);
             $table->boolean('email_notification')->default(true);
             $table->boolean('sms_notification')->default(false);
             $table->enum('color_mode', ['dark', 'light', 'system'])->default('system');
