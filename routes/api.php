@@ -4,6 +4,7 @@ use App\Http\Controllers\ActionController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CpdController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StatisticsController;
 use App\Http\Controllers\SupportStaffController;
 use App\Http\Controllers\TicketController;
@@ -139,6 +140,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         Route::put('/settings/security', [UserController::class, 'changePassword']);
         Route::put('/me', [UserController::class, 'update']);
+
+        Route::get('/settings', [SettingsController::class, 'settings']);
     });
 });
 
