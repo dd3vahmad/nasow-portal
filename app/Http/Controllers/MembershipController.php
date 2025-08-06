@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\RoleType;
 use App\Http\Resources\MemberResource;
 use App\Http\Resources\MembersResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\User;
 use App\Models\UserDocument;
+use App\Models\UserMembershipRenewal;
 use App\Models\UserMemberships;
 use App\Services\MembershipNumberGenerator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Models\Role;
 
 class MembershipController extends Controller {
@@ -425,5 +426,119 @@ class MembershipController extends Controller {
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
         }
+    }
+
+    /**
+     * Initiates user membership renewal
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return ApiResponse
+     */
+    public function initiateRenewal(Request $request) {
+        try {
+            $user_id = auth()->user()->id;
+            $request->validate([
+                'category' => 'required|in:STUD,PROF,ASSOC',
+            ]);
+            $data = $request->validated();
+
+            // Check for pending renewals
+            if (UserMembershipRenewal::where('user_id', $user_id)->where('status', 'PENDING')->exists()) {
+                return ApiResponse::error('A pending renewal already exists');
+            }
+
+            // Generate unique order_id
+            $order_id = uniqid('RNW-', true);
+            $amount = $this->getMembershipAmount($data['category']);
+
+            // Create renewal record
+            $renewal = UserMembershipRenewal::create([
+                'order_id' => $order_id,
+                'category' => $data['category'],
+                'amount' => $amount,
+                'user_id' => $user_id,
+                'status' => 'PENDING',
+            ]);
+
+            return ApiResponse::success('Membership renewal initiated', [
+                'order_id' => $order_id,
+                'renewal' => $renewal,
+            ]);
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
+
+    private function getMembershipAmount($category) {
+        $costs = [
+            'STUD' => 500,
+            'ASSOC' => 1000,
+            'PROF' => 1500,
+        ];
+        return $costs[$category] ?? 500;
+    }
+
+    /**
+     * Confirms user membership renewal
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return ApiResponse
+     */
+    public function confirmRenewal(Request $request) {
+        try {
+            $user_id = auth()->user()->id;
+            $request->validate([
+                'transaction_id' => 'required',
+            ]);
+            $data = $request->validated();
+
+            // Find the renewal
+            $renewal = UserMembershipRenewal::where('user_id', $user_id)
+                ->where('order_id', $data['transaction_id'])
+                ->where('status', 'PENDING')
+                ->latest()
+                ->firstOrFail();
+
+            // Verify payment
+            $paymentResponse = $this->verifyPayment($data['transaction_id']);
+
+            if ($paymentResponse['status'] && $paymentResponse['data']['status'] === 'APPROVED') {
+                if ($paymentResponse['orderid'] === $renewal->order_id && $paymentResponse['data']['amount'] == $renewal->amount) {
+                    // Update renewal
+                    $renewal->update([
+                        'verified_at' => now(),
+                        'status' => 'APPROVED',
+                    ]);
+
+                    // Create membership
+                    $new_membership = UserMemberships::create([
+                        'category' => $renewal->category,
+                        'user_id' => $user_id,
+                    ]);
+
+                    return ApiResponse::success('Membership renewed successfully', $new_membership);
+                } else {
+                    $renewal->update(['status' => 'FAILED']);
+                    throw new \Exception('Payment details do not match renewal record');
+                }
+            } else {
+                $renewal->update(['status' => 'FAILED']);
+                Log::error('Payment verification failed', ['response' => $paymentResponse]);
+                throw new \Exception('Payment verification failed');
+            }
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage());
+        }
+    }
+
+    private function verifyPayment($transaction_id) {
+        $client = new \GuzzleHttp\Client();
+        $response = $client->get('https://api.monicredit.com/payment/transactions/verify-transaction', [
+            'query' => [
+                'transaction_id' => $transaction_id,
+                'private_key' => env('MONICREDIT_PRIVATE_KEY'),
+            ],
+        ]);
+        return json_decode($response->getBody(), true);
     }
 }

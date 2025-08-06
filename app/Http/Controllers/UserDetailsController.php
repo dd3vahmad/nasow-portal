@@ -71,12 +71,7 @@ class UserDetailsController extends Controller
             throw new Exception("Invalid category", 1);
         }
 
-        $existing_membership = UserMemberships::where('user_id', $user_id)->active()->first();
-        if ($existing_membership) {
-            throw new Exception("You have an active membership. Kindly revoke it before continuing?", 1);
-        }
-
-        return UserMemberships::createOrFirst([
+        return UserMemberships::create([
             'category' => $category,
             'user_id' => $user_id
         ])->first();
