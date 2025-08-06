@@ -53,6 +53,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/cpd/logs/stats', [CpdController::class, 'stats']);
             Route::post('/tickets', [TicketController::class, 'store']);
             Route::get('/tickets/mine', [TicketController::class, 'mine']);
+            Route::post("/me/membership/renewal/initiate", [MembershipController::class, 'initiateRenewal']);
+            Route::post("/me/membership/renewal/confirm", [MembershipController::class, 'confirmRenewal']);
             Route::get("/me/membership", [MembershipController::class, 'membership']);
             Route::get("/me/membership/documents", [MembershipController::class, 'documents']);
         });
