@@ -53,7 +53,7 @@ class UserMemberships extends Model {
      */
     public function isActive(): bool
     {
-        return ($this->expires_at ?? null) && ($this->expires_at ?? null)->isFuture();
+        return ($this->expires_at ?? null) && ($this->expires_at ?? null)->isFuture() && $this->status === 'verified';
     }
 
     /**
@@ -61,7 +61,7 @@ class UserMemberships extends Model {
     */
     public function scopeActive(Builder $query)
     {
-        return $query->where('expires_at', '>', Carbon::now());
+        return $query->where('expires_at', '>', Carbon::now())->where('status', 'verified');
     }
 
     /**
