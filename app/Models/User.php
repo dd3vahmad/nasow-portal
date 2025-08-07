@@ -96,6 +96,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return optional($this->credentials)->password ?? null;
     }
 
+    public function getEmailForPasswordReset()
+    {
+        return $this->email;
+    }
+
     public function getEmailVerifiedAtAttribute()
     {
         return optional($this->credentials)->email_verified_at ?? null;
@@ -139,5 +144,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function sendClosedTicketNotification(Ticket $ticket)
     {
         $this->notify(new \App\Notifications\ClosedTicket($ticket));
+    }
+
+    /**
+     * Send the password reset notification.
+     *
+     * @param string $token
+     * @return void
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new \App\Notifications\ResetPassword($token));
     }
 }
