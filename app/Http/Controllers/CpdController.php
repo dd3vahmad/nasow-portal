@@ -10,6 +10,7 @@ use App\Http\Resources\CpdLogResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\CpdActivity;
 use App\Models\CpdLog;
+use App\Models\User;
 use App\Services\ActionLogger;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -110,6 +111,7 @@ class CPDController extends Controller
                 $user_id,
                 $user->details->state ?? null
             );
+            $user->sendNotification('Your CPD activity has been logged successfully', 'cpd');
 
             return ApiResponse::success('Log created successfully', $log);
         } catch (\Throwable $th) {
@@ -291,6 +293,9 @@ class CPDController extends Controller
             $title = $log->title ?? '';
             ActionLogger::audit("CPD log approved: {$title}", $user->id ?? null);
 
+            $member = User::find($log->member_id);
+            $member->sendNotification('Your CPD activity (' . $title . ') has been approved', 'cpd');
+
             return ApiResponse::success('Log approved successfully', $log);
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
@@ -313,6 +318,9 @@ class CPDController extends Controller
             $log->update([ 'status' => 'rejected' ]);
             $title = $log->title ?? '';
             ActionLogger::audit("CPD log rejected: {$title}", $user->id ?? null);
+
+            $member = User::find($log->member_id);
+            $member->sendNotification('Your CPD activity (' . $title . ') was rejected', 'cpd');
 
             return ApiResponse::success('Log approved successfully', $log);
         } catch (\Throwable $th) {
