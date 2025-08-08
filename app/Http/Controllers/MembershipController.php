@@ -189,6 +189,7 @@ class MembershipController extends Controller {
             }
             $member->assignRole($role);
             $member->sendMembershipApprovedNotification();
+            $member->sendNotification('Your membership has now been approved', 'user');
 
             return ApiResponse::success('Membership approved successfully', $membership);
         } catch (\Throwable $th) {
@@ -231,6 +232,7 @@ class MembershipController extends Controller {
             $membership->update($updateData);
 
             $member->sendMembershipSuspendedNotification();
+            $member->sendNotification('Your membership has now been suspended', 'user');
 
             return ApiResponse::success('Membership suspended successfully', $membership);
         } catch (\Throwable $th) {
@@ -281,6 +283,7 @@ class MembershipController extends Controller {
             $unverified_membership->update([ 'status' => 'pending' ]);
             $user->update(['reg_status' => 'done']);
             $user->sendPendingMembershipNotification();
+            $user->sendNotification('Your membership application is pending and awaiting review', 'user');
 
             return ApiResponse::success('User membership confirmed successfully');
         } catch (\Throwable $th) {
@@ -357,6 +360,8 @@ class MembershipController extends Controller {
                 'reviewed_at' => now()
             ]);
 
+            $membership->user()->sendNotification('Your membership is now under review', 'user');
+
             return ApiResponse::success('Membership marked successfully', $membership);
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
@@ -384,6 +389,8 @@ class MembershipController extends Controller {
                 'status' => 'pending-approval',
                 'approval_requested_at' => now()
             ]);
+
+            $membership->user()->sendNotification('Your membership is now pending approval', 'user');
 
             return ApiResponse::success('Membership reviewed successfully', $membership);
         } catch (\Throwable $th) {
@@ -483,7 +490,8 @@ class MembershipController extends Controller {
      */
     public function confirmRenewal(Request $request) {
         try {
-            $user_id = auth()->user()->id;
+            $user = auth()->user();
+            $user_id = $user->id;
             $request->validate([
                 'transaction_id' => 'required',
             ]);
@@ -503,11 +511,13 @@ class MembershipController extends Controller {
                         'verified_at' => now(),
                         'status' => 'APPROVED',
                     ]);
+                    $user->sendNotification('Your membership renewal payment was successful', 'payment');
 
                     $new_membership = UserMemberships::create([
                         'category' => $renewal->category,
                         'user_id' => $user_id,
                     ]);
+                    $user->sendNotification('Your membership renewal request was successful and is pending review.', 'user');
 
                     return ApiResponse::success('Membership renewed successfully', $new_membership);
                 } else {
