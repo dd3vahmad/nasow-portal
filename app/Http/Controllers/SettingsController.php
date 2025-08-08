@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Responses\ApiResponse;
 use App\Models\Setting;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class SettingsController extends Controller
@@ -35,7 +36,8 @@ class SettingsController extends Controller
     public function change(Request $request)
     {
         try {
-            $settings = Setting::where('user_id', auth()->id())->first();
+            $user_id = auth()->id();
+            $settings = Setting::where('user_id', $user_id)->first();
 
             if (!$settings) {
                 return ApiResponse::error('Settings not found. Try logging in.');
@@ -59,8 +61,10 @@ class SettingsController extends Controller
                 'metadata',
             ]);
 
-            // Update only the provided keys
             $settings->update($validated);
+
+            $user = User::find($user_id);
+            $user->sendNotification('Your settings has been changed successfully');
 
             return ApiResponse::success('Settings changed successfully', $settings);
         } catch (\Throwable $th) {
