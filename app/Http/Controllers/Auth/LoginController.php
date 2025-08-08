@@ -78,7 +78,6 @@ class LoginController extends Controller {
                 return ApiResponse::error('A user with this email was not found', 404);
             }
 
-            // Generate and send the password reset token
             $token = Password::broker()->createToken($user);
             $user->sendPasswordResetNotification($token);
 
@@ -98,23 +97,28 @@ class LoginController extends Controller {
     {
         try {
             $request->validate([
-                'token' => 'required',
+                'token' => 'required|string',
                 'email' => 'required|email|exists:users,email',
                 'password' => 'required|min:8|confirmed',
             ]);
 
             $user = User::where('email', $request->email)->first();
+            if (!$user) {
+                return ApiResponse::error('User not found', 404);
+            }
 
-            // Verify the token and update the password
             $status = Password::broker()->reset(
-                $request->only('email', 'password', 'password_confirmation', 'token'),
+                [
+                    'email' => $request->email,
+                    'password' => $request->password,
+                    'password_confirmation' => $request->password_confirmation,
+                    'token' => $request->token,
+                ],
                 function ($user, $password) {
-                    // Update the password in the UserCredential model
                     $user->credentials()->update([
-                        'password' => Hash::make($password), // Hash::make is redundant here due to mutator
+                        'password' => Hash::make($password),
                     ]);
 
-                    // Fire the PasswordReset event
                     event(new PasswordReset($user));
                 }
             );

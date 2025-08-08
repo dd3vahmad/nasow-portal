@@ -2,12 +2,10 @@
 
 namespace App\Notifications;
 
-use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use Illuminate\Support\Facades\URL;
 
 class ResetPassword extends Notification
 {
@@ -49,20 +47,11 @@ class ResetPassword extends Notification
      */
     protected function resetUrl($notifiable)
     {
-        $frontendUrl = config('app.frontend_url', 'https://nasow-portal.vercel.app');
+        $frontendUrl = config('app.frontend_url', 'http://localhost:3000');
+        $email = urlencode($notifiable->getEmailForPasswordReset());
+        $token = urlencode($this->token);
 
-        // Create a signed URL for the API endpoint that will redirect to frontend
-        $temporarySignedURL = URL::temporarySignedRoute(
-            'password.reset',
-            Carbon::now()->addMinutes(60),
-            [
-                'token' => $this->token,
-                'email' => $notifiable->getEmailForPasswordReset(),
-            ]
-        );
-
-        // Optionally, append the signed URL as a query parameter to the frontend URL
-        return $frontendUrl . '/reset-password?token=' . urlencode($this->token) . '&email=' . urlencode($notifiable->getEmailForPasswordReset());
+        return "{$frontendUrl}/reset-password?token={$token}&email={$email}";
     }
 
     /**

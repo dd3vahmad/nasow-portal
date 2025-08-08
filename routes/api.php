@@ -24,6 +24,7 @@ use App\Http\Controllers\MembershipController;
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/register', [RegisterController::class, 'register']);
 Route::post('/password/reset', [LoginController::class, 'reset'])->name('password.update');
+Route::post('/password/reset/link', [LoginController::class, 'sendPasswordResetLink']);
 
 Route::get('oauth/{provider}',      [OAuthController::class, 'redirect']);
 Route::get('oauth/{provider}/back', [OAuthController::class, 'callback']);
