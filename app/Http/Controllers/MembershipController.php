@@ -442,16 +442,13 @@ class MembershipController extends Controller {
             ]);
             $data = $request->validated();
 
-            // Check for pending renewals
             if (UserMembershipRenewal::where('user_id', $user_id)->where('status', 'PENDING')->exists()) {
                 return ApiResponse::error('A pending renewal already exists');
             }
 
-            // Generate unique order_id
             $order_id = uniqid('RNW-', true);
             $amount = $this->getMembershipAmount($data['category']);
 
-            // Create renewal record
             $renewal = UserMembershipRenewal::create([
                 'order_id' => $order_id,
                 'category' => $data['category'],
@@ -492,25 +489,21 @@ class MembershipController extends Controller {
             ]);
             $data = $request->validated();
 
-            // Find the renewal
             $renewal = UserMembershipRenewal::where('user_id', $user_id)
                 ->where('order_id', $data['transaction_id'])
                 ->where('status', 'PENDING')
                 ->latest()
                 ->firstOrFail();
 
-            // Verify payment
             $paymentResponse = $this->verifyPayment($data['transaction_id']);
 
             if ($paymentResponse['status'] && $paymentResponse['data']['status'] === 'APPROVED') {
                 if ($paymentResponse['orderid'] === $renewal->order_id && $paymentResponse['data']['amount'] == $renewal->amount) {
-                    // Update renewal
                     $renewal->update([
                         'verified_at' => now(),
                         'status' => 'APPROVED',
                     ]);
 
-                    // Create membership
                     $new_membership = UserMemberships::create([
                         'category' => $renewal->category,
                         'user_id' => $user_id,
