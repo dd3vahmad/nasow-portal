@@ -13,6 +13,7 @@ use App\Http\Controllers\UserDetailsController;
 use App\Http\Controllers\UserDocumentsController;
 use App\Http\Controllers\UserEducationsController;
 use App\Http\Controllers\UserEmploymentsController;
+use App\Http\Controllers\UserNotificationController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\OAuthController;
@@ -148,6 +149,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         Route::get('/settings', [SettingsController::class, 'settings']);
         Route::put('/settings', [SettingsController::class, 'change']);
+
+        Route::get('/notifications', [UserNotificationController::class, 'index']);
+        Route::get('/notifications/{id}', [UserNotificationController::class, 'show']);
+
+        Route::patch('/notifications/{id}/read', [UserNotificationController::class, 'markAsRead']);
+        Route::patch('/notifications/read', [UserNotificationController::class, 'markManyAsRead']);
+
+        Route::patch('/notifications/{id}/unread', [UserNotificationController::class, 'markAsUnread']);
+        Route::patch('/notifications/unread', [UserNotificationController::class, 'markManyAsUnread']);
     });
 });
 
