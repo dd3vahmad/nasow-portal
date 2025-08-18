@@ -47,6 +47,7 @@ class TicketController extends Controller
                 ]);
 
                 $ticket->setRelation('messages', collect([$message]));
+                $user->sendNotification('Your complaint has been received and our support team will attend to you as soon as possible.', 'ticket');
                 ActionLogger::log(
                     ActivityType::SUPPORT->value,
                     "Support ticket opened: {$data['subject']}",
@@ -224,6 +225,9 @@ class TicketController extends Controller
             $support->sendAssignedTicketNotification($ticket);
             ActionLogger::audit("Assigned ticket to {$support->name}", $user->id ?? null);
 
+            $member = User::find($ticket->user_id);
+            $member->sendNotification('Our support team are currently checking your complaint, you will receive feedback soon. Thanks for your understanding.', 'ticket');
+
             return ApiResponse::success('Ticket assigned to support', new TicketResource($ticket));
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
@@ -251,6 +255,9 @@ class TicketController extends Controller
             $user->sendClosedTicketNotification($ticket);
             ActionLogger::audit("{$user->name} closed a ticket: {$subject}", $user->id ?? null);
 
+            $member = User::find($ticket->user_id);
+            $member->sendNotification('Your complaint has been resolved, kindly confirm or you can create a new ticket if you encounter any other issue. Thank you.', 'ticket');
+
             return ApiResponse::success('Ticket closed', new TicketResource($ticket));
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
@@ -266,12 +273,27 @@ class TicketController extends Controller
     public function sendMessage(StoreTicketMessageRequest $request) {
         try {
             $validated = $request->validated();
+            $sender_id = auth()->id();
+            $ticket_id = $validated['ticket_id'];
+            $sender = User::find($sender_id);
 
+            $ticket = Ticket::find($ticket_id);
             $message = TicketMessage::create([
-                'sender_id' => auth()->id(),
-                'ticket_id' => $validated['ticket_id'],
+                'sender_id' => $sender_id,
+                'ticket_id' => $ticket_id,
                 'message'   => $validated['message'],
             ]);
+
+            $receiver = null;
+            if ($sender_id === $ticket->user_id) {
+                $receiver = User::find($ticket->assigned_to);
+            } else {
+                $receiver = User::find($ticket->user_id);
+            }
+
+            if ($receiver) {
+                $receiver->sendNotification('Your have a new ticket message from ' . $sender->name, 'message');
+            }
 
             return ApiResponse::success('Ticket message created successfully.', $message, 201);
         } catch (\Throwable $th) {

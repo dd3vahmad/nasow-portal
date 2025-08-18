@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\User;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
@@ -55,6 +57,79 @@ class LoginController extends Controller {
             ]);
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
+        }
+    }
+
+    /**
+     * Sends password reset link to user's email
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return ApiResponse
+     */
+    public function sendPasswordResetLink(Request $request)
+    {
+        try {
+            $request->validate([
+                'email' => 'required|email|exists:users,email',
+            ]);
+
+            $user = User::where('email', $request->email)->first();
+            if (!$user) {
+                return ApiResponse::error('A user with this email was not found', 404);
+            }
+
+            $token = Password::broker()->createToken($user);
+            $user->sendPasswordResetNotification($token);
+
+            return ApiResponse::success('Password reset link has been sent to your email');
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Handle the password reset request from the frontend.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \App\Http\Responses\ApiResponse
+     */
+    public function reset(Request $request)
+    {
+        try {
+            $request->validate([
+                'token' => 'required|string',
+                'email' => 'required|email|exists:users,email',
+                'password' => 'required|min:8|confirmed',
+            ]);
+
+            $user = User::where('email', $request->email)->first();
+            if (!$user) {
+                return ApiResponse::error('User not found', 404);
+            }
+
+            $status = Password::broker()->reset(
+                [
+                    'email' => $request->email,
+                    'password' => $request->password,
+                    'password_confirmation' => $request->password_confirmation,
+                    'token' => $request->token,
+                ],
+                function ($user, $password) {
+                    $user->credentials()->update([
+                        'password' => Hash::make($password),
+                    ]);
+
+                    event(new PasswordReset($user));
+                }
+            );
+
+            if ($status === Password::PASSWORD_RESET) {
+                return ApiResponse::success('Password has been reset successfully');
+            }
+
+            return ApiResponse::error('Invalid token or email', 400);
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage(), 500);
         }
     }
 

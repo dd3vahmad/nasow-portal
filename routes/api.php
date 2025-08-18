@@ -13,6 +13,7 @@ use App\Http\Controllers\UserDetailsController;
 use App\Http\Controllers\UserDocumentsController;
 use App\Http\Controllers\UserEducationsController;
 use App\Http\Controllers\UserEmploymentsController;
+use App\Http\Controllers\UserNotificationController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\OAuthController;
@@ -23,6 +24,8 @@ use App\Http\Controllers\MembershipController;
 /* Public (unauthenticated) */
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/register', [RegisterController::class, 'register']);
+Route::post('/password/reset', [LoginController::class, 'reset'])->name('password.update');
+Route::post('/password/reset/link', [LoginController::class, 'sendPasswordResetLink']);
 
 Route::get('oauth/{provider}',      [OAuthController::class, 'redirect']);
 Route::get('oauth/{provider}/back', [OAuthController::class, 'callback']);
@@ -53,6 +56,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/cpd/logs/stats', [CpdController::class, 'stats']);
             Route::post('/tickets', [TicketController::class, 'store']);
             Route::get('/tickets/mine', [TicketController::class, 'mine']);
+            Route::post("/me/membership/renewal/initiate", [MembershipController::class, 'initiateRenewal']);
+            Route::post("/me/membership/renewal/confirm", [MembershipController::class, 'confirmRenewal']);
             Route::get("/me/membership", [MembershipController::class, 'membership']);
             Route::get("/me/membership/documents", [MembershipController::class, 'documents']);
         });
@@ -145,6 +150,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
         /** Settings routes - accessible to all authenticated users */
         Route::get('/settings', [SettingsController::class, 'settings']);
         Route::put('/settings', [SettingsController::class, 'change']);
+
+        Route::get('/notifications', [UserNotificationController::class, 'index']);
+        Route::get('/notifications/{id}', [UserNotificationController::class, 'show']);
+
+        Route::patch('/notifications/{id}/read', [UserNotificationController::class, 'markAsRead']);
+        Route::patch('/notifications/read', [UserNotificationController::class, 'markManyAsRead']);
+
+        Route::patch('/notifications/{id}/unread', [UserNotificationController::class, 'markAsUnread']);
+        Route::patch('/notifications/unread', [UserNotificationController::class, 'markManyAsUnread']);
     });
 });
 

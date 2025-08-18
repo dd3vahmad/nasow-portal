@@ -83,7 +83,7 @@ class UserController extends Controller
 
             $user = Auth::user();
             $fullName = $validated['first_name'] . ' ' . $validated['last_name'];
-            if (!empty($validated['other_name'])) {
+            if (!empty($validated['other_name'] ?? null)) {
                 $fullName .= ' ' . $validated['other_name'];
             }
 
@@ -95,7 +95,7 @@ class UserController extends Controller
                 [
                     'first_name' => $validated['first_name'],
                     'last_name' => $validated['last_name'],
-                    'other_name' => $validated['other_name'],
+                    'other_name' => $validated['other_name'] ?? null,
                     'gender' => $validated['gender'],
                     'dob' => $validated['dob'],
                     'address' => $validated['address'],

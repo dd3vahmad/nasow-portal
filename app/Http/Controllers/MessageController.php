@@ -81,6 +81,16 @@ class MessageController extends Controller
 
         broadcast(new MessageSent($message))->toOthers();
 
+        $notificationMessage = $chat->type === 'private'
+            ? "You have a new message from {$user->name}"
+            : "You have a new message in {$chat->name}";
+
+        foreach ($chat->participants as $participant) {
+            if ($participant->id !== $user->id) {
+                $participant->sendNotification($notificationMessage);
+            }
+        }
+
         return ApiResponse::success('Message sent successfully', $message->load(['user', 'replyTo.user']), 201);
     }
 

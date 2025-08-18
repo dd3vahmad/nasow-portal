@@ -60,6 +60,12 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasOne(UserCredential::class);
     }
+
+    public function notifications()
+    {
+        return $this->hasMany(UserNotification::class);
+    }
+
     public function details()
     {
         return $this->hasOne(UserDetails::class);
@@ -96,6 +102,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return optional($this->credentials)->password ?? null;
     }
 
+    public function getEmailForPasswordReset()
+    {
+        return $this->email;
+    }
+
     public function getEmailVerifiedAtAttribute()
     {
         return optional($this->credentials)->email_verified_at ?? null;
@@ -109,6 +120,20 @@ class User extends Authenticatable implements MustVerifyEmail
     public function markEmailAsVerified(): bool
     {
         return $this->credentials()->update(['email_verified_at' => now()]);
+    }
+
+    public function sendNotification(string $message, string $type = 'general')
+    {
+        $validTypes = ['message', 'verification', 'cpd', 'user', 'payment', 'auth', 'general'];
+
+        if (!in_array($type, $validTypes)) {
+            throw new \InvalidArgumentException("Invalid notification type: {$type}");
+        }
+
+        return $this->notifications()->create([
+            'message' => $message,
+            'type' => $type
+        ]);
     }
 
     public function sendEmailVerificationNotification(): void
@@ -139,5 +164,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function sendClosedTicketNotification(Ticket $ticket)
     {
         $this->notify(new \App\Notifications\ClosedTicket($ticket));
+    }
+
+    /**
+     * Send the password reset notification.
+     *
+     * @param string $token
+     * @return void
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new \App\Notifications\ResetPassword($token));
     }
 }
