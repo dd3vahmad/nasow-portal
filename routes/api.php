@@ -87,8 +87,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
         /** State Admin Only Routes */
         Route::middleware('role:state-admin')->group(function () {
             Route::get('/cpd/logs/state', [CpdController::class, 'state']);
-            Route::get('tickets/state', [TicketController::class, 'state']);
+            Route::get('/tickets/state', [TicketController::class, 'state']);
             Route::get('/supports/state', [SupportStaffController::class, 'state']);
+            Route::get('/stats/state', [StatisticsController::class, 'state']);
+            Route::get('/charts/state', [StatisticsController::class, 'state_charts']);
+            Route::get('/report/state', [StatisticsController::class, 'state_breakdown']);
         });
 
         /** National Admin Only Routes */
@@ -99,8 +102,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/supports', [SupportStaffController::class, 'index']);
             Route::get('/tickets', [TicketController::class, 'index']);
             Route::get('/stats/national', [StatisticsController::class, 'national']);
-            Route::get('charts/national', [StatisticsController::class, 'national_charts']);
-            Route::get('report/national', [StatisticsController::class, 'national_breakdown']);
+            Route::get('/charts/national', [StatisticsController::class, 'national_charts']);
+            Route::get('/report/national', [StatisticsController::class, 'national_breakdown']);
         });
 
         /** National-Admin & State-Admin Only Routes */
