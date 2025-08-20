@@ -150,6 +150,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::put('/me', [UserController::class, 'update']);
         Route::get('/me/details', [UserController::class, 'details']);
 
+        /** Settings routes - accessible to all authenticated users */
         Route::get('/settings', [SettingsController::class, 'settings']);
         Route::put('/settings', [SettingsController::class, 'change']);
 
