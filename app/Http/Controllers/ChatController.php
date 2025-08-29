@@ -20,6 +20,9 @@ class ChatController extends Controller
     {
         try {
             $user = auth()->user();
+            
+            // Update user's last activity for online status
+            $user->updateLastActivity();
 
             $chats = Chat::whereHas('participants', function ($query) use ($user) {
                 $query->where('user_id', $user->id);
@@ -28,14 +31,12 @@ class ChatController extends Controller
             ->withCount(['messages'])
             ->get()
             ->map(function ($chat) use ($user) {
-                $chat->unread_count = $chat->unreadCount($user->id);
-
                 if ($chat->type === 'private') {
                     $other = $chat->participants->firstWhere('id', '!=', $user->id);
                     $chat->name = $other?->name;
                     $chat->metadata = [
-                        'online' => $other?->isOnline(), // assuming isOnline() exists
-                        'role' => $other?->role,
+                        'online' => $other?->isOnline(),
+                        'role' => $other?->getRoleNames()->first() ?? 'Member',
                     ];
                 }
 
@@ -122,30 +123,35 @@ class ChatController extends Controller
             case 'state-admin':
                 foreach ($participants as $participant) {
                     if (!in_array($participant->role, ['member', 'support-staff', 'case-manager', 'state-admin']) ||
-                        ($participant->role === 'member' && $participant->state !== $user->state)) {
+                        ($participant->role === 'member' && 
+                         ($participant->details->state ?? '') !== ($user->details->state ?? ''))) {
                         abort(403, 'You can only chat with members from your state and support staff');
                     }
                 }
                 break;
 
             case 'case-manager':
-                foreach ($participants as $participant) {
-                    if (!in_array($participant->role, ['member', 'support-staff', 'case-manager'])) {
-                        abort(403, 'Case managers can only chat with members, support staffs and fellow case managers');
-                    }
-                }
+                // NO MORE RESTRICTIONS - Case managers can chat with ANYONE
+                // foreach ($participants as $participant) {
+                //     if (!in_array($participant->role, ['member', 'support-staff', 'case-manager'])) {
+                //         abort(403, 'Case managers can only chat with members, support staffs and fellow case managers');
+                //     }
+                // }
                 break;
 
             case 'support-staff':
-                foreach ($participants as $participant) {
-                    if (!in_array($participant->role, ['member', 'support-staff', 'case-manager'])) {
-                        abort(403, 'Case managers can only chat with members, case managers and fellow support staffs');
-                    }
-                }
+                // NO MORE RESTRICTIONS - Support staff can chat with ANYONE
+                // foreach ($participants as $participant) {
+                //     if (!in_array($participant->role, ['member', 'support-staff', 'case-manager'])) {
+                //         abort(403, 'Case managers can only chat with members, case managers and fellow support staffs');
+                //     }
+                // }
                 break;
 
             default:
-                abort(403, 'You do not have permission to create chats');
+                // NO MORE RESTRICTIONS - Everyone can create chats
+                // abort(403, 'You do not have permission to create chats');
+                break;
         }
     }
 
@@ -159,25 +165,24 @@ class ChatController extends Controller
     {
         try {
             $user = auth()->user();
+            
+            // Update user's last activity for online status
+            $user->updateLastActivity();
+            
             $chat = Chat::findOrFail($chatId);
 
             if (!$chat->participants->contains($user->id)) {
                 abort(403, 'You are not a participant in this chat');
             }
 
-            $chat->load(['participants', 'messages.user', 'messages.replyTo.user', 'messages.reads']);
-
-            // Add read status to each message
-            $chat->messages->each(function ($message) use ($user) {
-                $message->read = $message->reads->contains('user_id', $user->id);
-            });
+            $chat->load(['participants', 'messages.user', 'messages.replyTo.user']);
 
             if ($chat->type === 'private') {
                 $other = $chat->participants->firstWhere('id', '!=', $user->id);
                 $chat->name = $other?->name;
                 $chat->metadata = [
                     'online' => $other?->isOnline(),
-                    'role' => $other?->role,
+                    'role' => $other?->getRoleNames()->first() ?? 'Member',
                 ];
             }
 
@@ -214,24 +219,30 @@ class ChatController extends Controller
                         })
                         ->orWhere(function ($subQ) use ($user) {
                             $subQ->role('member', 'api')
-                                ->where('state', $user->state);
+                                ->whereHas('details', function ($detailQ) use ($user) {
+                                    $userState = $user->details->state ?? null;
+                                    if ($userState) {
+                                        $detailQ->where('state', $userState);
+                                    }
+                                });
                         });
                     });
                     break;
 
                 case 'case-manager':
-                    $query->where(function ($q) {
-                        $q->role('member', 'api')
-                        ->orWhere(function ($subQ) {
-                            $subQ->role('support-staff', 'api');
-                        })
-                        ->orWhere(function ($subQ) {
-                            $subQ->role('case-manager', 'api');
-                        })
-                        ->orWhere(function ($subQ) {
-                            $subQ->role('guest', 'api');
-                        });
-                    });
+                    // NO MORE RESTRICTIONS - Case managers can see ALL users
+                    // $query->where(function ($q) {
+                    //     $q->role('member', 'api')
+                    //     ->orWhere(function ($subQ) {
+                    //         $subQ->role('support-staff', 'api');
+                    //     })
+                    //     ->orWhere(function ($subQ) {
+                    //         $subQ->role('case-manager', 'api');
+                    //     })
+                    //     ->orWhere(function ($subQ) {
+                    //         $subQ->role('guest', 'api');
+                    //     });
+                    // });
                     break;
 
                 case 'support-staff':
@@ -250,21 +261,23 @@ class ChatController extends Controller
                     break;
 
                 default:
-                    return ApiResponse::success('Available users fetched successfully', []);
+                    // NO MORE RESTRICTIONS - Everyone can see all users
+                    // return ApiResponse::success('Available users fetched successfully', []);
+                    break;
             }
 
             return ApiResponse::success(
                 'Available users fetched successfully',
                 $query
-                        ->select('id', 'name', 'email')->with('details')
+                        ->select('id', 'name', 'email')
+                        ->with(['details', 'roles'])
                         ->get()
                         ->map(function ($u) {
                             $u['role'] = $u->getRoleNames()->first();
                             $u->makeHidden('roles');
 
                             return $u;
-                        }
-                    )
+                        })
                 );
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage(), 500);
@@ -289,7 +302,8 @@ class ChatController extends Controller
             return ApiResponse::error('Only chat admins can add participants', 403);
         }
 
-        $this->validateChatCreationPermissions($user, [$participantToAdd->id]);
+        // NO MORE ROLE RESTRICTIONS - Allow adding any user
+        // $this->validateChatCreationPermissions($user, [$participantToAdd->id]);
 
         if ($chat->participants->contains($participantToAdd->id)) {
             return ApiResponse::error('User is already a participant', 400);
@@ -323,5 +337,45 @@ class ChatController extends Controller
         $chat->participants()->detach($participant->id);
 
         return ApiResponse::success('Participant removed successfully');
+    }
+
+    /**
+     * Delete a chat and all its messages
+     *
+     * @param int $chatId
+     * @return ApiResponse
+     */
+    public function destroy(int $chatId)
+    {
+        try {
+            $user = auth()->user();
+            $chat = Chat::findOrFail($chatId);
+
+            // Check if user is a participant
+            if (!$chat->participants->contains($user->id)) {
+                return ApiResponse::error('You are not a participant in this chat', 403);
+            }
+
+            // For group chats, only admins can delete
+            if ($chat->type === 'group') {
+                $currentUserParticipant = $chat->participants()->where('user_id', $user->id)->first();
+                if (!$currentUserParticipant || !$currentUserParticipant->pivot->is_admin) {
+                    return ApiResponse::error('Only chat admins can delete group chats', 403);
+                }
+            }
+
+            // Delete all messages first
+            $chat->messages()->delete();
+            
+            // Delete all participants
+            $chat->participants()->detach();
+            
+            // Delete the chat
+            $chat->delete();
+
+            return ApiResponse::success('Chat deleted successfully');
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage(), 500);
+        }
     }
 }

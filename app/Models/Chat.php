@@ -32,12 +32,4 @@ class Chat extends Model
     {
         return $this->hasOne(Message::class)->latestOfMany();
     }
-
-    public function unreadCount($userId)
-    {
-        return $this->messages()
-            ->whereDoesntHave('reads', function ($query) use ($userId) {
-                $query->where('user_id', $userId);
-            })->count();
-    }
 }
