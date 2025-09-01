@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'monicredit' => [
+        'private_key' => env('MONICREDIT_PRIVATE_KEY'),
+        'public_key' => env('MONICREDIT_PUBLIC_KEY'),
+        'revenue_head' => env('MONICREDIT_REVENUE_HEAD'),
+        'base_url' => env('MONICREDIT_BASE_URL')
+    ]
+
 ];

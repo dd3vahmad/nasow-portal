@@ -11,6 +11,8 @@ use App\Models\UserMembershipRenewal;
 use App\Models\UserMemberships;
 use App\Services\MembershipNumberGenerator;
 use Illuminate\Http\Request;
+use Illuminate\Http\Client\RequestException;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Models\Role;
@@ -275,19 +277,67 @@ class MembershipController extends Controller {
                 throw new \Exception('Complete membership details before confirming', 1);
             }
 
-            $unverified_membership = UserMemberships::where('user_id', $user->id ?? null)->where('status', 'unverified')->first();
+            $unverified_membership = UserMemberships::where('user_id', $user->id ?? null)
+                ->where('status', 'unverified')
+                ->first();
+
             if (!$unverified_membership) {
                 throw new \Exception("You do not have an active and unverified membership.", 1);
             }
 
-            $unverified_membership->update([ 'status' => 'pending' ]);
+            $transaction_id = $request->reference_code;
+            $private_key    = config('services.monicredit.private_key', '');
+            $base_url       = rtrim(config('services.monicredit.base_url', ''), '/');
+
+            if (!$transaction_id) {
+                throw new \Exception("Transaction ID is required.", 1);
+            }
+
+            try {
+                // ✅ Wrap the HTTP request in a try/catch
+                $response = Http::timeout(10)->get("{$base_url}/payment/transactions/verify-transaction", [
+                    'transaction_id' => $transaction_id,
+                    'private_key'    => $private_key,
+                ]);
+            } catch (\Exception $e) {
+                // 🚨 Log the detailed error internally
+                \Log::error("Monicredit API request failed", [
+                    'transaction_id' => $transaction_id,
+                    'error' => $e->getMessage(),
+                ]);
+
+                // 🚫 Return a safe message to the client
+                return ApiResponse::error("Payment verification service unavailable. Please try again later.");
+            }
+
+            if (!$response->ok()) {
+                throw new \Exception("Unable to connect to payment provider. Try again later.", 1);
+            }
+
+            $data = $response->json();
+
+            if (!($data['status'] ?? false)) {
+                throw new \Exception($data['message'] ?? "Payment verification failed.", 1);
+            }
+
+            if (($data['data']['status'] ?? null) !== "APPROVED") {
+                throw new \Exception("Payment not approved. Current status: " . ($data['data']['status'] ?? "UNKNOWN"), 1);
+            }
+
+            // ✅ Payment verified, update membership and user
+            $unverified_membership->update(['status' => 'pending']);
             $user->update(['reg_status' => 'done']);
+
             $user->sendPendingMembershipNotification();
-            $user->sendNotification('Your membership application is pending and awaiting review', 'user');
+            $user->sendNotification(
+                'Your membership application is pending and awaiting review',
+                'user'
+            );
 
             return ApiResponse::success('User membership confirmed successfully');
         } catch (\Throwable $th) {
-            return ApiResponse::error($th->getMessage());
+            // Return safe error without leaking sensitive info
+            return ApiResponse::error("An error occurred while confirming your membership. Please try again later.");
         }
     }
 
