@@ -7,9 +7,10 @@ use App\Http\Requests\Chats\StoreMessageRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\Chat;
 use App\Models\Message;
-use App\Models\MessageRead;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class MessageController extends Controller
 {
@@ -23,10 +24,14 @@ class MessageController extends Controller
      */
     public function store(StoreMessageRequest $request, int $chatId)
     {
-        $data = $request->validated();
-        $user = auth()->user();
-
-        $chat = Chat::findOrFail($chatId);
+        try {
+            $data = $request->validated();
+            $user = auth()->user();
+            
+            // Update user's last activity for online status
+            $user->updateLastActivity();
+            
+            $chat = Chat::findOrFail($chatId);
 
         if (!$chat->participants->contains($user->id)) {
             return ApiResponse::error('You are not a participant in this chat', 403);
@@ -74,11 +79,6 @@ class MessageController extends Controller
             'attachments' => $attachments,
         ]);
 
-        MessageRead::create([
-            'message_id' => $message->id,
-            'user_id' => $user->id,
-        ]);
-
         broadcast(new MessageSent($message))->toOthers();
 
         $notificationMessage = $chat->type === 'private'
@@ -92,30 +92,6 @@ class MessageController extends Controller
         }
 
         return ApiResponse::success('Message sent successfully', $message->load(['user', 'replyTo.user']), 201);
-    }
-
-    /**
-     * Marks a message as read
-     *
-     * @param \Illuminate\Http\Request $request
-     * @param \App\Models\Chat $chat
-     * @return ApiResponse
-     */
-    public function markAsRead(Request $request)
-    {
-        try {
-            $user = auth()->user();
-
-            $messageIds = $request->input('message_ids', []);
-
-            foreach ($messageIds as $messageId) {
-                MessageRead::firstOrCreate([
-                    'message_id' => $messageId,
-                    'user_id' => $user->id,
-                ]);
-            }
-
-            return ApiResponse::success('Messages marked as read');
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
         }
@@ -182,6 +158,40 @@ class MessageController extends Controller
         } catch (\Exception $e) {
             Log::error('File download failed: ' . $e->getMessage());
             return ApiResponse::error( 'File not found or inaccessible', 404);
+        }
+    }
+
+    /**
+     * Clear all messages from a chat
+     *
+     * @param int $chatId
+     * @return ApiResponse
+     */
+    public function clearChatMessages(int $chatId)
+    {
+        try {
+            $user = auth()->user();
+            $chat = Chat::findOrFail($chatId);
+
+            // Check if user is a participant
+            if (!$chat->participants->contains($user->id)) {
+                return ApiResponse::error('You are not a participant in this chat', 403);
+            }
+
+            // For group chats, only admins can clear messages
+            if ($chat->type === 'group') {
+                $currentUserParticipant = $chat->participants()->where('user_id', $user->id)->first();
+                if (!$currentUserParticipant || !$currentUserParticipant->pivot->is_admin) {
+                    return ApiResponse::error('Only chat admins can clear group chat messages', 403);
+                }
+            }
+
+            // Delete all messages in the chat
+            $chat->messages()->delete();
+
+            return ApiResponse::success('Chat messages cleared successfully');
+        } catch (\Throwable $th) {
+            return ApiResponse::error($th->getMessage(), 500);
         }
     }
 }

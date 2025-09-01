@@ -142,9 +142,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/chats/{chatId}', [ChatController::class, 'show']);
 
         Route::post('/chats/{chatId}/messages', [MessageController::class, 'store']);
-        Route::post('/chats/messages/read', [MessageController::class, 'markAsRead']);
         Route::post('/chats/{chatId}/typing', [MessageController::class, 'typing']);
         Route::get('/messages/{messageId}/attachments/{index}', [MessageController::class, 'downloadAttachment']);
+        
+        // Chat management endpoints
+        Route::delete('/chats/{chatId}', [ChatController::class, 'destroy']);
+        Route::delete('/chats/{chatId}/messages', [MessageController::class, 'clearChatMessages']);
 
         Route::put('/settings/security', [UserController::class, 'changePassword']);
         Route::put('/me', [UserController::class, 'update']);

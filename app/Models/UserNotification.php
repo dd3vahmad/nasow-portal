@@ -14,6 +14,9 @@ class UserNotification extends Model
         'read_at' => 'datetime',
     ];
 
+    // Include the is_read attribute in API responses
+    protected $appends = ['is_read'];
+
     public function markAsRead(): bool
     {
         return $this->update(['read_at' => now()]);

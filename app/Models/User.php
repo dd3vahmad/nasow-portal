@@ -52,7 +52,20 @@ class User extends Authenticatable implements MustVerifyEmail
     /** Check user online status */
     public function isOnline(): bool
     {
-        return cache()->has('user-is-online-' . $this->id);
+        // Simple online status: if user has been active in the last 5 minutes, consider them online
+        $lastActivity = cache()->get('user-last-activity-' . $this->id);
+        if (!$lastActivity) {
+            return false;
+        }
+        
+        // Consider user online if they've been active in the last 5 minutes
+        return now()->diffInMinutes($lastActivity) < 5;
+    }
+
+    /** Update user's last activity */
+    public function updateLastActivity(): void
+    {
+        cache()->put('user-last-activity-' . $this->id, now(), now()->addMinutes(10));
     }
 
     /** Relations */
