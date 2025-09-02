@@ -294,19 +294,19 @@ class MembershipController extends Controller {
             }
 
             try {
-                // ✅ Wrap the HTTP request in a try/catch
+                // Wrap the HTTP request in a try/catch
                 $response = Http::timeout(10)->get("{$base_url}/payment/transactions/verify-transaction", [
                     'transaction_id' => $transaction_id,
                     'private_key'    => $private_key,
                 ]);
             } catch (\Exception $e) {
-                // 🚨 Log the detailed error internally
+                // Log the detailed error internally
                 \Log::error("Monicredit API request failed", [
                     'transaction_id' => $transaction_id,
                     'error' => $e->getMessage(),
                 ]);
 
-                // 🚫 Return a safe message to the client
+                // Return a safe message to the client
                 return ApiResponse::error("Payment verification service unavailable. Please try again later.");
             }
 
@@ -324,7 +324,7 @@ class MembershipController extends Controller {
                 throw new \Exception("Payment not approved. Current status: " . ($data['data']['status'] ?? "UNKNOWN"), 1);
             }
 
-            // ✅ Payment verified, update membership and user
+            // Payment verified, update membership and user
             $unverified_membership->update(['status' => 'pending']);
             $user->update(['reg_status' => 'done']);
 
