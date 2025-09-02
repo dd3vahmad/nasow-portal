@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\UserCredential;
 use App\Models\UserDetails;
 use App\Models\UserMemberships;
+use App\Models\MembershipCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -27,16 +28,15 @@ class UserController extends Controller
             $user_id = $user->id ?? null;
 
             $details = UserDetails::where('user_id', $user_id)->first();
-            $firstMembership = UserMemberships::where('user_id', $user_id)
-                ->orderBy('created_at', 'asc')
-                ->first();
+            $latestMembership = UserMemberships::where('user_id', $user_id)->latest()->first();
+            $membershipCategory = MembershipCategory::where('slug', $latestMembership->category)->first();
 
             $user_details = [
                 'id' => $user_id,
                 'name' => $user->name,
                 'email' => $user->email,
                 'role' => $role,
-                'status' => $firstMembership?->status ?? null,
+                'status' => $latestMembership?->status ?? null,
                 'last_login' => $user->last_login ?? null,
                 'reg_status' => $user->reg_status ?? null,
             ];
@@ -48,6 +48,8 @@ class UserController extends Controller
                     'other_name' => $details->other_name ?? null,
                     'gender' => $details->gender ?? null,
                     'dob' => $details->dob ?? null,
+                    'category' => $latestMembership->category,
+                    'membership_price' => $membershipCategory->price,
                     'address' => $details->address ?? null,
                     'specialization' => $details->specialization ?? null,
                     'state' => $details->state ?? null,
