@@ -20,6 +20,7 @@ use App\Http\Controllers\Auth\OAuthController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\MembershipController;
+use App\Http\Controllers\MembershipCategoryController;
 
 /* Public (unauthenticated) */
 Route::post('/login', [LoginController::class, 'login']);
@@ -99,6 +100,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/cpd/logs', [CpdController::class, 'index']);
             Route::post('/register/admin', [RegisterController::class, 'registerAdmin']);
             Route::get('/members', [MembershipController::class, 'index']);
+            Route::get('/membership/categories', [MembershipCategoryController::class, 'index']);
             Route::get('/supports', [SupportStaffController::class, 'index']);
             Route::get('/tickets', [TicketController::class, 'index']);
             Route::get('/stats/national', [StatisticsController::class, 'national']);
@@ -144,7 +146,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/chats/{chatId}/messages', [MessageController::class, 'store']);
         Route::post('/chats/{chatId}/typing', [MessageController::class, 'typing']);
         Route::get('/messages/{messageId}/attachments/{index}', [MessageController::class, 'downloadAttachment']);
-        
+
         // Chat management endpoints
         Route::delete('/chats/{chatId}', [ChatController::class, 'destroy']);
         Route::delete('/chats/{chatId}/messages', [MessageController::class, 'clearChatMessages']);
