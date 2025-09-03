@@ -29,7 +29,7 @@ class UserController extends Controller
 
             $details = UserDetails::where('user_id', $user_id)->first();
             $latestMembership = UserMemberships::where('user_id', $user_id)->latest()->first();
-            $membershipCategory = MembershipCategory::where('slug', $latestMembership->category)->first();
+            $membershipCategory = MembershipCategory::where('slug', $latestMembership?->category)->first();
 
             $user_details = [
                 'id' => $user_id,
@@ -39,6 +39,7 @@ class UserController extends Controller
                 'status' => $latestMembership?->status ?? null,
                 'last_login' => $user->last_login ?? null,
                 'reg_status' => $user->reg_status ?? null,
+                'registration_date' => $user->created_at ?? null,
             ];
 
             if ($details) {
@@ -48,8 +49,8 @@ class UserController extends Controller
                     'other_name' => $details->other_name ?? null,
                     'gender' => $details->gender ?? null,
                     'dob' => $details->dob ?? null,
-                    'category' => $latestMembership->category,
-                    'membership_price' => $membershipCategory->price,
+                    'category' => $latestMembership?->category,
+                    'membership_price' => $membershipCategory?->price,
                     'address' => $details->address ?? null,
                     'specialization' => $details->specialization ?? null,
                     'state' => $details->state ?? null,

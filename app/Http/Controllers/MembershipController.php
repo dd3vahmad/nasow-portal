@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\UserDocument;
 use App\Models\UserMembershipRenewal;
 use App\Models\UserMemberships;
+use App\Models\MembershipPayment;
 use App\Services\MembershipNumberGenerator;
 use Illuminate\Http\Request;
 use Illuminate\Http\Client\RequestException;
@@ -269,7 +270,8 @@ class MembershipController extends Controller {
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function confirm(Request $request) {
+    public function confirm(Request $request)
+    {
         try {
             $user = auth()->user();
 
@@ -277,7 +279,7 @@ class MembershipController extends Controller {
                 throw new \Exception('Complete membership details before confirming', 1);
             }
 
-            $unverified_membership = UserMemberships::where('user_id', $user->id ?? null)
+            $unverified_membership = UserMemberships::where('user_id', $user->id)
                 ->where('status', 'unverified')
                 ->first();
 
@@ -286,45 +288,35 @@ class MembershipController extends Controller {
             }
 
             $transaction_id = $request->reference_code;
-            $private_key    = config('services.monicredit.private_key', '');
-            $base_url       = rtrim(config('services.monicredit.base_url', ''), '/');
-
             if (!$transaction_id) {
                 throw new \Exception("Transaction ID is required.", 1);
             }
 
-            try {
-                // Wrap the HTTP request in a try/catch
-                $response = Http::timeout(10)->get("{$base_url}/payment/transactions/verify-transaction", [
-                    'transaction_id' => $transaction_id,
-                    'private_key'    => $private_key,
-                ]);
-            } catch (\Exception $e) {
-                // Log the detailed error internally
-                \Log::error("Monicredit API request failed", [
-                    'transaction_id' => $transaction_id,
-                    'error' => $e->getMessage(),
-                ]);
+            // Verify payment via helper method
+            $verifiedData = $this->verifyPayment($transaction_id);
 
-                // Return a safe message to the client
-                return ApiResponse::error("Payment verification service unavailable. Please try again later.");
+            if (!$verifiedData['success']) {
+                throw new \Exception($verifiedData['message'], 1);
             }
 
-            if (!$response->ok()) {
-                throw new \Exception("Unable to connect to payment provider. Try again later.", 1);
-            }
+            $paymentData = $verifiedData['data'];
 
-            $data = $response->json();
+            // Payment APPROVED → create payment record
+            MembershipPayment::create([
+                'user_id'                 => $user->id,
+                'membership_category_id'  => $unverified_membership->membership_category_id,
+                'order_id'                => $paymentData['orderid'],
+                'transaction_id'          => $paymentData['transid'],
+                'public_key'              => config('services.monicredit.public_key'),
+                'fee_bearer'              => 'client',
+                'currency'                => 'NGN',
+                'amount'                  => $paymentData['amount'],
+                'channel'                 => $paymentData['channel'],
+                'date_paid'               => $paymentData['date_paid'],
+                'raw_response'            => json_encode($verifiedData['raw']),
+            ]);
 
-            if (!($data['status'] ?? false)) {
-                throw new \Exception($data['message'] ?? "Payment verification failed.", 1);
-            }
-
-            if (($data['data']['status'] ?? null) !== "APPROVED") {
-                throw new \Exception("Payment not approved. Current status: " . ($data['data']['status'] ?? "UNKNOWN"), 1);
-            }
-
-            // Payment verified, update membership and user
+            // Update membership + user
             $unverified_membership->update(['status' => 'pending']);
             $user->update(['reg_status' => 'done']);
 
@@ -336,9 +328,76 @@ class MembershipController extends Controller {
 
             return ApiResponse::success('User membership confirmed successfully');
         } catch (\Throwable $th) {
-            // Return safe error without leaking sensitive info
+            var_dump($th);
             return ApiResponse::error("An error occurred while confirming your membership. Please try again later.");
         }
+    }
+
+    /**
+    * Verify payment with Monicredit
+    */
+    private function verifyPayment(string $transaction_id): array
+    {
+        $private_key = config('services.monicredit.private_key');
+        $base_url    = rtrim(config('services.monicredit.base_url', ''), '/');
+
+        try {
+            $response = Http::timeout(10)->get("{$base_url}/payment/transactions/verify-transaction", [
+                'transaction_id' => $transaction_id,
+                'private_key'    => $private_key,
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Monicredit API request failed", [
+                'transaction_id' => $transaction_id,
+                'error'          => $e->getMessage(),
+            ]);
+
+            return [
+                'success' => false,
+                'message' => "Payment verification service unavailable. Please try again later.",
+                'data'    => null,
+                'raw'     => null,
+            ];
+        }
+
+        if (!$response->ok()) {
+            return [
+                'success' => false,
+                'message' => "Unable to connect to payment provider. Try again later.",
+                'data'    => null,
+                'raw'     => $response->json(),
+            ];
+        }
+
+        $data = $response->json();
+
+        // If Monicredit says not valid
+        if (!($data['status'] ?? false)) {
+            return [
+                'success' => false,
+                'message' => $data['message'] ?? "Payment verification failed.",
+                'data'    => $data['data'] ?? null,
+                'raw'     => $data,
+            ];
+        }
+
+        // If transaction not approved
+        if (($data['data']['status'] ?? null) !== "APPROVED") {
+            return [
+                'success' => false,
+                'message' => "Payment not approved. Current status: " . ($data['data']['status'] ?? "UNKNOWN"),
+                'data'    => $data['data'],
+                'raw'     => $data,
+            ];
+        }
+
+        // Payment approved
+        return [
+            'success' => true,
+            'message' => "Payment approved",
+            'data'    => $data['data'],
+            'raw'     => $data,
+        ];
     }
 
     /**
@@ -582,16 +641,5 @@ class MembershipController extends Controller {
         } catch (\Throwable $th) {
             return ApiResponse::error($th->getMessage());
         }
-    }
-
-    private function verifyPayment($transaction_id) {
-        $client = new \GuzzleHttp\Client();
-        $response = $client->get('https://api.monicredit.com/payment/transactions/verify-transaction', [
-            'query' => [
-                'transaction_id' => $transaction_id,
-                'private_key' => env('MONICREDIT_PRIVATE_KEY'),
-            ],
-        ]);
-        return json_decode($response->getBody(), true);
     }
 }
