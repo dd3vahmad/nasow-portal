@@ -101,6 +101,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('/register/admin', [RegisterController::class, 'registerAdmin']);
             Route::get('/members', [MembershipController::class, 'index']);
             Route::get('/membership/categories', [MembershipCategoryController::class, 'index']);
+            Route::post('/membership/categories', [MembershipCategoryController::class, 'store']);
             Route::get('/supports', [SupportStaffController::class, 'index']);
             Route::get('/tickets', [TicketController::class, 'index']);
             Route::get('/stats/national', [StatisticsController::class, 'national']);
